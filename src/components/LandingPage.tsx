@@ -1,39 +1,19 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheck,
-  Zap,
-  Lock,
   ArrowRight,
-  ExternalLink,
-  CheckCircle2,
-  Clock,
-  Sparkles,
   ChevronDown,
-  RefreshCw,
-  Coins,
-  Shield,
-  Eye,
   Users,
-  Check,
   Building2,
   TrendingUp,
-  HelpCircle,
-  Play,
   RotateCcw,
 } from 'lucide-react';
 
 interface LandingPageProps {
   onLaunchApp: () => void;
-  onExploreReferrals?: () => void;
-  onExploreTrace?: () => void;
-  agreementsCount?: number;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onLaunchApp,
-  onExploreReferrals,
-  onExploreTrace,
-  agreementsCount = 4,
 }) => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 

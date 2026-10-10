@@ -207,9 +207,6 @@ export const App: React.FC = () => {
       <div className="landing-wrapper">
         <LandingPage
           onLaunchApp={() => handleSelectTab('overview')}
-          onExploreReferrals={() => handleSelectTab('referrals')}
-          onExploreTrace={() => handleSelectTab('trace')}
-          agreementsCount={agreements.length}
         />
 
         {/* Protocol Guide Modal */}
