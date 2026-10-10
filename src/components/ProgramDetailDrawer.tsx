@@ -1,0 +1,326 @@
+import React, { useState } from 'react';
+import type { Agreement, ConnectedWallet, HorizonErrorDetail } from '../stellar/types';
+import {
+  getStellarExpertTxUrl,
+  getStellarExpertAccountUrl,
+  reclaimRewardOnChain,
+  parseHorizonError,
+} from '../stellar/stellarService';
+import {
+  updateAgreementState,
+  fastForwardDeadline,
+} from '../store/agreementStore';
+import { PayoutTrace } from './PayoutTrace';
+import {
+  X,
+  ExternalLink,
+  Copy,
+  Check,
+  ArrowRightLeft,
+  FastForward,
+  ShieldAlert,
+  ArrowRight,
+} from 'lucide-react';
+
+interface ProgramDetailDrawerProps {
+  agreement: Agreement | null;
+  isOpen: boolean;
+  onClose: () => void;
+  connectedWallet: ConnectedWallet | null;
+  onNavigateToReferrer: (code: string) => void;
+  onUpdated: () => void;
+}
+
+export const ProgramDetailDrawer: React.FC<ProgramDetailDrawerProps> = ({
+  agreement,
+  isOpen,
+  onClose,
+  connectedWallet: _connectedWallet,
+  onNavigateToReferrer,
+  onUpdated,
+}) => {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [reclaiming, setReclaiming] = useState(false);
+  const [reclaimStatus, setReclaimStatus] = useState('');
+  const [errorDetail, setErrorDetail] = useState<HorizonErrorDetail | null>(null);
+
+  if (!isOpen || !agreement) return null;
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(id);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const isExpired = Date.now() > agreement.deadline;
+
+  const handleFastForward = () => {
+    fastForwardDeadline(agreement.code);
+    onUpdated();
+  };
+
+  const handleReclaim = async () => {
+    if (!isExpired) {
+      setErrorDetail({ title: 'Not Yet Expired', status: 400, detail: 'Cannot reclaim: the deadline has not passed yet.' });
+      return;
+    }
+
+    setReclaiming(true);
+    setReclaimStatus('Submitting Reclaim transaction to Stellar Testnet...');
+    setErrorDetail(null);
+
+    try {
+      const res = await reclaimRewardOnChain(agreement);
+      updateAgreementState(agreement.code, 'RECLAIMED', {
+        reclaimTxHash: res.reclaimTxHash,
+      });
+      onUpdated();
+    } catch (err: any) {
+      console.error('Reclaim error:', err);
+      setErrorDetail(parseHorizonError(err));
+    } finally {
+      setReclaiming(false);
+      setReclaimStatus('');
+    }
+  };
+
+  const referrerUrl = `${window.location.origin}/r/${agreement.code}`;
+
+  return (
+    <div className="drawer-overlay" onClick={onClose}>
+      <div className="drawer-panel" onClick={(e) => e.stopPropagation()}>
+        {/* Drawer Header */}
+        <div className="drawer-header">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className={`status-badge badge-${agreement.state.toLowerCase()}`}>
+                {agreement.state}
+              </span>
+              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+                #{agreement.code}
+              </span>
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+              {agreement.customerLabel}
+            </h3>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={onClose}
+            aria-label="Close drawer"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Drawer Body */}
+        <div className="drawer-body">
+          {/* Primary Financial Snapshot */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+              marginBottom: '20px',
+            }}
+          >
+            <div className="card-subtle">
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                Escrow Reward
+              </span>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--accent-lime)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                {agreement.amount} {agreement.assetCode}
+              </div>
+            </div>
+
+            <div className="card-subtle">
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                Expiry Deadline
+              </span>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: isExpired ? 'var(--semantic-red)' : 'var(--text-primary)', marginTop: '4px' }}>
+                {isExpired ? 'Deadline Passed' : new Date(agreement.deadline).toLocaleString()}
+              </div>
+            </div>
+          </div>
+
+          {/* Error Banner */}
+          {errorDetail && (
+            <div className="alert-box alert-error">
+              <ShieldAlert size={18} />
+              <div>
+                <strong>{errorDetail.title}</strong>
+                <p style={{ marginTop: '2px' }}>{errorDetail.detail}</p>
+              </div>
+            </div>
+          )}
+
+          {/* On-Chain Cryptographic Anchors */}
+          <div style={{ marginBottom: '24px' }}>
+            <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '10px' }}>
+              On-Chain Identity & Anchors
+            </h4>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Escrow Vault Key */}
+              <div className="card-subtle" style={{ padding: '10px 14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>Stellar Escrow Vault Address</span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      onClick={() => copyToClipboard(agreement.escrowPublicKey, 'escrow')}
+                      style={{ padding: '2px 6px', fontSize: '11px' }}
+                    >
+                      {copiedKey === 'escrow' ? <Check size={11} color="var(--accent-lime)" /> : <Copy size={11} />}
+                    </button>
+                    <a
+                      href={getStellarExpertAccountUrl(agreement.escrowPublicKey)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline btn-sm"
+                      style={{ padding: '2px 6px', fontSize: '11px' }}
+                    >
+                      <ExternalLink size={11} />
+                    </a>
+                  </div>
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-primary)', marginTop: '4px', wordBreak: 'break-all' }}>
+                  {agreement.escrowPublicKey}
+                </div>
+              </div>
+
+              {/* Referrer Payout Key */}
+              <div className="card-subtle" style={{ padding: '10px 14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>Referrer Destination Public Key</span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      onClick={() => copyToClipboard(agreement.referrerAddress, 'referrer')}
+                      style={{ padding: '2px 6px', fontSize: '11px' }}
+                    >
+                      {copiedKey === 'referrer' ? <Check size={11} color="var(--accent-lime)" /> : <Copy size={11} />}
+                    </button>
+                    <a
+                      href={getStellarExpertAccountUrl(agreement.referrerAddress)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline btn-sm"
+                      style={{ padding: '2px 6px', fontSize: '11px' }}
+                    >
+                      <ExternalLink size={11} />
+                    </a>
+                  </div>
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-primary)', marginTop: '4px', wordBreak: 'break-all' }}>
+                  {agreement.referrerAddress}
+                </div>
+              </div>
+
+              {/* Initial Lock Transaction */}
+              {agreement.lockTxHash && (
+                <div className="card-subtle" style={{ padding: '10px 14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>Vault Creation Tx Hash</span>
+                    <a
+                      href={getStellarExpertTxUrl(agreement.lockTxHash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline btn-sm"
+                      style={{ padding: '2px 6px', fontSize: '11px' }}
+                    >
+                      Explorer <ExternalLink size={11} />
+                    </a>
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--accent-blue)', marginTop: '4px', wordBreak: 'break-all' }}>
+                    {agreement.lockTxHash}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Actions Panel */}
+          <div style={{ marginBottom: '24px' }}>
+            <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '10px' }}>
+              Operational Actions
+            </h4>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  readOnly
+                  value={referrerUrl}
+                  className="form-input font-mono"
+                  style={{ fontSize: '12px', background: 'var(--surface-input)' }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => copyToClipboard(referrerUrl, 'link')}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {copiedKey === 'link' ? <Check size={13} color="var(--accent-lime)" /> : <Copy size={13} />}
+                  Copy Link
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => {
+                    onClose();
+                    onNavigateToReferrer(agreement.code);
+                  }}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  Open Portal <ArrowRight size={13} />
+                </button>
+              </div>
+
+              {/* Fast Forward & Reclaim Controls */}
+              {agreement.state === 'LOCKED' && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={handleFastForward}
+                    title="Simulate deadline passage for testing"
+                  >
+                    <FastForward size={13} color="var(--semantic-amber)" />
+                    Fast-Forward Deadline (Demo)
+                  </button>
+
+                  {isExpired && (
+                    <button
+                      id="reclaim-reward-btn"
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={handleReclaim}
+                      disabled={reclaiming}
+                      style={{ background: 'var(--semantic-amber)', borderColor: 'var(--semantic-amber)', color: '#000' }}
+                    >
+                      <ArrowRightLeft size={13} />
+                      {reclaiming ? reclaimStatus || 'Reclaiming...' : 'Reclaim Deposit to Business'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Embedded Payout Trace */}
+          <div>
+            <h4 style={{ fontSize: '13px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '10px' }}>
+              Complete Payout Trace
+            </h4>
+            <PayoutTrace agreement={agreement} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
