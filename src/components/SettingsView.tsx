@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { ConnectedWallet } from '../stellar/types';
+import React, { useState, useEffect } from 'react';
+import type { ConnectedWallet, BusinessProfile } from '../stellar/types';
 import {
   HORIZON_URL,
   FRIENDBOT_URL,
@@ -11,11 +11,16 @@ import {
   clearAllAgreements,
 } from '../store/agreementStore';
 import {
+  loadBusinessProfile,
+} from '../store/businessStore';
+import {
   ShieldCheck,
   Server,
   Zap,
   RotateCcw,
   Trash2,
+  Building2,
+  ExternalLink,
 } from 'lucide-react';
 
 interface SettingsViewProps {
@@ -23,6 +28,7 @@ interface SettingsViewProps {
   onOpenWalletModal: () => void;
   onRefreshWallets: () => void;
   onAgreementsUpdated: () => void;
+  onOpenBusinessModal?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -30,12 +36,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenWalletModal,
   onRefreshWallets,
   onAgreementsUpdated,
+  onOpenBusinessModal,
 }) => {
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile>(loadBusinessProfile());
   const [funding, setFunding] = useState(false);
   const [fundSuccess, setFundSuccess] = useState<string | null>(null);
   const [fundError, setFundError] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setBusinessProfile(loadBusinessProfile());
+    };
+    window.addEventListener('rewalf_business_updated', handleUpdate);
+    return () => window.removeEventListener('rewalf_business_updated', handleUpdate);
+  }, []);
 
   const handleFundConnected = async () => {
     if (!connectedWallet) {
@@ -86,6 +102,87 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Business Identity & Verified Profile */}
+        <div className="card" style={{ border: '1px solid var(--border-focus)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Building2 size={18} color="var(--accent-lime)" />
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Registered Business Identity
+                </h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                  Branded profile displayed to affiliate partners and stamped on generated referral links
+                </p>
+              </div>
+            </div>
+            {onOpenBusinessModal && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={onOpenBusinessModal}
+              >
+                <Building2 size={14} />
+                Edit Business Profile
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, rgba(200, 255, 0, 0.15) 0%, rgba(0, 240, 255, 0.15) 100%)',
+              border: '1px solid rgba(200, 255, 0, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '18px',
+              color: 'var(--accent-lime)',
+              fontFamily: 'var(--font-mono)',
+            }}>
+              {businessProfile.name.charAt(0).toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: '220px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {businessProfile.name}
+                </span>
+                <span className="badge badge-settled" style={{ fontSize: '11px' }}>
+                  Verified Business
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+                  {businessProfile.category}
+                </span>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                {businessProfile.description}
+              </p>
+              {businessProfile.website && (
+                <a
+                  href={businessProfile.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '12px',
+                    color: 'var(--accent-lime)',
+                    marginTop: '6px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <ExternalLink size={12} />
+                  {businessProfile.website}
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Network & Endpoints */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>

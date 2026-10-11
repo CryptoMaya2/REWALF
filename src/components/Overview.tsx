@@ -1,128 +1,164 @@
 import React, { useState, useEffect } from 'react';
-import type { Agreement, ConnectedWallet } from '../stellar/types';
+import type { Agreement, ConnectedWallet, Protocol } from '../stellar/types';
 import {
+  Building2,
   Layers,
-  Clock,
-  ShieldCheck,
+  Link as LinkIcon,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
-  ArrowRightLeft,
   Plus,
-  Wallet,
-  Zap,
+  ExternalLink,
 } from 'lucide-react';
 
 interface OverviewProps {
+  protocols: Protocol[];
   agreements: Agreement[];
   connectedWallet: ConnectedWallet | null;
-  onOpenCreateModal: () => void;
+  onOpenRegisterProtocol: () => void;
+  onSelectProtocol: (protocol: Protocol) => void;
+  onOpenCreateCampaign: () => void;
   onOpenWalletModal: () => void;
-  onNavigateTab: (tab: 'overview' | 'programs' | 'referrals' | 'payouts' | 'trace' | 'settings', filter?: string) => void;
-  onSelectAgreementForTrace: (code: string) => void;
-  onInspectProgram: (agreement: Agreement) => void;
+  onNavigateTab: (tab: any, filter?: string) => void;
+  onInspectCampaign: (agreement: Agreement) => void;
+  onNavigateToReferrer: (code: string) => void;
 }
 
 export const Overview: React.FC<OverviewProps> = ({
+  protocols,
   agreements,
   connectedWallet,
-  onOpenCreateModal,
-  onOpenWalletModal,
+  onOpenRegisterProtocol,
+  onSelectProtocol,
+  onOpenCreateCampaign,
+  onOpenWalletModal: _onOpenWalletModal,
   onNavigateTab,
-  onSelectAgreementForTrace,
-  onInspectProgram,
+  onInspectCampaign,
+  onNavigateToReferrer,
 }) => {
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
-  // Reactive expiry: refresh every 60 s
+  // Refresh clock every minute for expiry checks
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
 
-  // Accurate calculated metrics strictly derived from loaded agreements
+  // Summary Metrics strictly derived from real data
+  const totalProtocols = protocols.length;
+  const activeProtocols = protocols.filter((p) => p.status === 'active').length;
+
   const totalAgreements = agreements.length;
   const lockedAgreements = agreements.filter((a) => a.state === 'LOCKED');
-  const activeUnexpired = lockedAgreements.filter((a) => a.deadline > currentTime);
+  const activeCampaigns = lockedAgreements.filter((a) => a.deadline > currentTime);
   const claimableAgreements = agreements.filter((a) => a.state === 'PAID');
-  const completedAgreements = agreements.filter((a) => a.state === 'CLAIMED');
+  const settledAgreements = agreements.filter((a) => a.state === 'CLAIMED');
   const expiredNeedingAction = lockedAgreements.filter((a) => a.deadline <= currentTime);
 
   // Financial sums
-  const totalEscrowUsdc = agreements
+  const totalLockedUsdc = agreements
     .filter((a) => a.assetCode === 'USDC')
-    .reduce((acc, curr) => acc + parseFloat(curr.amount || '0'), 0);
+    .reduce(
+      (acc, curr) =>
+        acc +
+        parseFloat(
+          curr.remainingBudget !== undefined
+            ? curr.remainingBudget
+            : curr.state === 'PAID' || curr.state === 'CLAIMED'
+            ? '0'
+            : curr.amount || '0'
+        ),
+      0
+    );
 
-  const totalEscrowXlm = agreements
-    .filter((a) => a.assetCode === 'XLM')
-    .reduce((acc, curr) => acc + parseFloat(curr.amount || '0'), 0);
-
-  const settledUsdc = completedAgreements
+  const totalSettledUsdc = agreements
     .filter((a) => a.assetCode === 'USDC')
-    .reduce((acc, curr) => acc + parseFloat(curr.amount || '0'), 0);
+    .reduce(
+      (acc, curr) =>
+        acc +
+        parseFloat(
+          curr.claimedAmount !== undefined
+            ? curr.claimedAmount
+            : curr.state === 'CLAIMED'
+            ? curr.amount || '0'
+            : '0'
+        ),
+      0
+    );
 
-  // Recent on-chain activity: sorted by most recently modified
+  const totalConversions = agreements.reduce(
+    (acc, curr) => acc + (curr.conversionsCount || (curr.conversions?.length || 0)),
+    0
+  );
+
   const recentAgreements = [...agreements]
     .sort((a, b) => (b.claimedAt || b.paidAt || b.createdAt) - (a.claimedAt || a.paidAt || a.createdAt))
-    .slice(0, 5);
+    .slice(0, 6);
 
   return (
-    <div>
-      {/* Top Banner / Hero Bar */}
+    <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* 1. Header Command Strip */}
       <div
+        className="card"
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px',
-          marginBottom: '24px',
+          padding: '24px',
+          background: 'var(--surface-card)',
+          border: '1px solid var(--border-card)',
         }}
       >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>
-              Protocol Operations
-            </span>
-            <span className="network-badge">
-              <span className="pulse-dot" />
-              Stellar Testnet
-            </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span className="network-badge">
+                <span className="pulse-dot" />
+                Stellar Testnet Protocol
+              </span>
+              {connectedWallet && (
+                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+                  Signer: {connectedWallet.publicKey.slice(0, 4)}...{connectedWallet.publicKey.slice(-4)}
+                </span>
+              )}
+            </div>
+            <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
+              Business & Protocol Dashboard
+            </h2>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              Manage registered web3 products, launch escrow-anchored referral campaigns, and audit settlements
+            </p>
           </div>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px', letterSpacing: '-0.3px' }}>
-            Protocol Command Centre
-          </h2>
-        </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={onOpenWalletModal}
-          >
-            <Wallet size={14} />
-            {connectedWallet ? `${connectedWallet.label || connectedWallet.walletType}` : 'Signer Settings'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary btn-sm"
-            onClick={onOpenCreateModal}
-          >
-            <Plus size={15} />
-            Lock New Escrow Vault
-          </button>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              id="dashboard-register-protocol-btn"
+              type="button"
+              className="btn btn-primary"
+              onClick={onOpenRegisterProtocol}
+              style={{ fontWeight: 700, padding: '10px 18px', boxShadow: '0 0 20px rgba(184, 243, 107, 0.25)' }}
+            >
+              <Building2 size={16} /> Register Protocol
+            </button>
+            <button
+              id="dashboard-create-campaign-btn"
+              type="button"
+              className="btn btn-secondary"
+              onClick={onOpenCreateCampaign}
+              style={{ fontWeight: 600, padding: '10px 18px' }}
+            >
+              <Plus size={16} /> Create Campaign
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Operational Attention Alerts */}
+      {/* 2. Operational Attention Banners */}
       {expiredNeedingAction.length > 0 && (
         <div className="alert-box alert-warning">
           <AlertTriangle size={18} />
           <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             <div>
-              <strong>{expiredNeedingAction.length} Escrow Agreement(s) Reached Expiry Deadline</strong>
+              <strong>{expiredNeedingAction.length} Campaign(s) Reached Expiry Deadline</strong>
               <p style={{ fontSize: '12px', marginTop: '2px', color: 'var(--text-secondary)' }}>
-                These rewards were not triggered by customer payment before deadline and can now be safely reclaimed back to the business wallet.
+                These referral rewards were not claimed before deadline and can now be safely reclaimed back to the business wallet.
               </p>
             </div>
             <button
@@ -149,7 +185,7 @@ export const Overview: React.FC<OverviewProps> = ({
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              onClick={() => onNavigateTab('programs', 'paid')}
+              onClick={() => onNavigateTab('campaigns', 'paid')}
             >
               Inspect Claimable <ArrowRight size={13} />
             </button>
@@ -157,269 +193,354 @@ export const Overview: React.FC<OverviewProps> = ({
         </div>
       )}
 
-      {/* Primary KPI Grid */}
+      {/* 3. Summary Metric Cards */}
       <div className="kpi-grid">
-        {/* KPI 1: Active Programs */}
+        {/* Metric 1: Registered Protocols */}
         <div
           className="kpi-card"
           style={{ cursor: 'pointer' }}
-          onClick={() => onNavigateTab('programs', 'locked')}
+          onClick={() => onNavigateTab('protocols')}
+          title="View all registered protocols"
         >
           <div className="kpi-header">
-            <span>Active Escrow Vaults</span>
-            <Layers size={15} />
+            <span>Registered Protocols</span>
+            <Building2 size={16} color="var(--accent-lime)" />
           </div>
-          <div className="kpi-value">
-            {activeUnexpired.length}
-            <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-tertiary)' }}>
-              / {totalAgreements} total
-            </span>
-          </div>
+          <div className="kpi-value">{totalProtocols}</div>
           <div className="kpi-subtext">
-            <span>Non-divertible locks on Stellar</span>
+            {activeProtocols} active • {totalProtocols - activeProtocols} pending integration
           </div>
         </div>
 
-        {/* KPI 2: Total Escrow Volume */}
-        <div className="kpi-card">
-          <div className="kpi-header">
-            <span>Total Escrow Volume</span>
-            <ShieldCheck size={15} />
-          </div>
-          <div className="kpi-value">
-            {totalEscrowUsdc.toFixed(0)} <span style={{ fontSize: '13px', color: 'var(--accent-lime)' }}>USDC</span>
-          </div>
-          <div className="kpi-subtext">
-            <span>+{totalEscrowXlm.toFixed(0)} XLM native locked</span>
-          </div>
-        </div>
-
-        {/* KPI 3: Awaiting Payout / Claimable */}
+        {/* Metric 2: Active Campaigns */}
         <div
           className="kpi-card"
           style={{ cursor: 'pointer' }}
-          onClick={() => onNavigateTab('payouts', 'paid')}
+          onClick={() => onNavigateTab('campaigns', 'locked')}
+          title="View active referral campaigns"
         >
           <div className="kpi-header">
-            <span>Claimable by Referrers</span>
-            <Clock size={15} />
+            <span>Active Campaigns</span>
+            <Layers size={16} color="var(--accent-blue)" />
           </div>
-          <div className="kpi-value" style={{ color: claimableAgreements.length > 0 ? 'var(--accent-blue)' : 'inherit' }}>
-            {claimableAgreements.length}
-            <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>programs</span>
-          </div>
+          <div className="kpi-value">{activeCampaigns.length}</div>
           <div className="kpi-subtext">
-            <span>Customer payment satisfied</span>
+            ${totalLockedUsdc.toFixed(2)} USDC locked in escrow
           </div>
         </div>
 
-        {/* KPI 4: Settled Payouts */}
+        {/* Metric 3: Tracked Referral Links */}
+        <div
+          className="kpi-card"
+          style={{ cursor: 'pointer' }}
+          onClick={() => onNavigateTab('links')}
+          title="View all referral links"
+        >
+          <div className="kpi-header">
+            <span>Tracked Referral Links</span>
+            <LinkIcon size={16} color="var(--semantic-amber)" />
+          </div>
+          <div className="kpi-value">{totalAgreements}</div>
+          <div className="kpi-subtext">
+            {totalConversions} verified customer sales
+          </div>
+        </div>
+
+        {/* Metric 4: Settled Payouts */}
         <div
           className="kpi-card"
           style={{ cursor: 'pointer' }}
           onClick={() => onNavigateTab('payouts', 'claimed')}
+          title="View settled payouts"
         >
           <div className="kpi-header">
             <span>Settled Payouts</span>
-            <CheckCircle2 size={15} />
+            <CheckCircle2 size={16} color="var(--semantic-green)" />
           </div>
-          <div className="kpi-value" style={{ color: 'var(--semantic-green)' }}>
-            {completedAgreements.length}
-            <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-              ({settledUsdc.toFixed(0)} USDC)
-            </span>
-          </div>
+          <div className="kpi-value">${totalSettledUsdc.toFixed(2)}</div>
           <div className="kpi-subtext">
-            <span>Transferred to referrer wallets</span>
+            {settledAgreements.length} claims settled on Stellar
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Operational Programs & Protocol Activity */}
-      <div className="overview-main-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.6fr) minmax(300px, 1fr)', gap: '20px' }}>
-        {/* Left Column: Priority Programs Table */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Active Referral Escrow Programs
-              </h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                Programs anchored on Stellar Horizon testnet
-              </p>
-            </div>
+      {/* 4. Registered Protocols Section */}
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Registered Protocols & Products
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+              Websites configured with Rewalf referral integrations
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
               className="btn btn-outline btn-sm"
-              onClick={() => onNavigateTab('programs')}
+              onClick={() => onNavigateTab('protocols')}
             >
-              View All ({totalAgreements}) <ArrowRight size={13} />
+              View All ({protocols.length})
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={onOpenRegisterProtocol}
+            >
+              <Plus size={13} /> Add Protocol
             </button>
           </div>
-
-          {agreements.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <Layers size={22} />
-              </div>
-              <h3>No Referral Programs Active</h3>
-              <p>Create and lock your first referral reward escrow vault on Stellar Testnet.</p>
-              <button type="button" className="btn btn-primary btn-sm" onClick={onOpenCreateModal}>
-                <Plus size={14} /> Create Program
-              </button>
-            </div>
-          ) : (
-            <div className="table-container" style={{ border: 'none', boxShadow: 'none' }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Customer Deal</th>
-                    <th>Reward</th>
-                    <th>Status</th>
-                    <th>Deadline</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentAgreements.map((a) => {
-                    const isExp = a.deadline <= currentTime;
-                    return (
-                      <tr key={a.code}>
-                        <td>
-                          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{a.customerLabel}</div>
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                            #{a.code}
-                          </span>
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                          {a.amount} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{a.assetCode}</span>
-                        </td>
-                        <td>
-                          <span className={`status-badge badge-${a.state.toLowerCase()}`}>
-                            {a.state}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: '12px', color: isExp ? 'var(--semantic-red)' : 'var(--text-secondary)' }}>
-                          {isExp ? 'Expired' : (
-                            <span title={new Date(a.deadline).toLocaleString()}>
-                              {new Date(a.deadline).toLocaleDateString([], { month: 'short', day: 'numeric' })}{' '}
-                              {new Date(a.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          )}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button
-                              type="button"
-                              className="btn btn-outline btn-sm"
-                              style={{ padding: '3px 8px', fontSize: '11px' }}
-                              onClick={() => onInspectProgram(a)}
-                            >
-                              Inspect
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-sm"
-                              style={{ padding: '3px 8px', fontSize: '11px' }}
-                              onClick={() => {
-                                onSelectAgreementForTrace(a.code);
-                                onNavigateTab('trace');
-                              }}
-                            >
-                              Trace
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
 
-        {/* Right Column: Trustless Protocol Architecture & Ledger Health */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Protocol Integrity Card */}
-          <div className="card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <ShieldCheck size={18} color="var(--accent-lime)" />
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Protocol Guarantees
-              </h3>
-            </div>
+        {protocols.length === 0 ? (
+          <div className="empty-state" style={{ padding: '36px 20px' }}>
+            <Building2 size={24} style={{ color: 'var(--text-tertiary)', marginBottom: '8px' }} />
+            <h4>No Protocols Registered Yet</h4>
+            <p>Register your website or web3 product to begin configuring referral attribution.</p>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={onOpenRegisterProtocol}
+              style={{ marginTop: '8px' }}
+            >
+              <Plus size={13} /> Register Your Protocol
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: '14px' }}>
+            {protocols.slice(0, 3).map((p) => {
+              const protoAgreements = agreements.filter(
+                (a) => a.protocolId === p.id || a.businessId === p.id || a.businessName === p.name
+              );
+              return (
+                <div
+                  key={p.id}
+                  className="card-subtle"
+                  style={{
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                  onClick={() => onSelectProtocol(p)}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: 'var(--radius-sm)',
+                            background: 'var(--accent-lime-subtle)',
+                            color: 'var(--accent-lime)',
+                            fontWeight: 800,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          {p.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                            {p.name}
+                          </span>
+                        </div>
+                      </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12.5px' }}>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <span style={{ color: 'var(--accent-lime)', fontWeight: 700 }}>01</span>
-                <div>
-                  <strong style={{ color: 'var(--text-primary)' }}>Pre-Funded Escrow Vaults</strong>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '2px' }}>
-                    Rewards are locked before promises are issued. Businesses cannot default after customer payment.
-                  </p>
-                </div>
-              </div>
+                      {p.status === 'active' ? (
+                        <span className="badge badge-settled" style={{ fontSize: '10px' }}>
+                          Active
+                        </span>
+                      ) : (
+                        <span className="badge badge-locked" style={{ fontSize: '10px' }}>
+                          Pending
+                        </span>
+                      )}
+                    </div>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <span style={{ color: 'var(--accent-lime)', fontWeight: 700 }}>02</span>
-                <div>
-                  <strong style={{ color: 'var(--text-primary)' }}>Non-Divertible Recipient Key</strong>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '2px' }}>
-                    Referrer address is cryptographically anchored via Stellar ManageData. Payout cannot be re-routed.
-                  </p>
-                </div>
-              </div>
+                    <a
+                      href={p.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--accent-lime)',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      {p.website} <ExternalLink size={10} />
+                    </a>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <span style={{ color: 'var(--accent-lime)', fontWeight: 700 }}>03</span>
-                <div>
-                  <strong style={{ color: 'var(--text-primary)' }}>Zero Key Custody</strong>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '2px' }}>
-                    Transactions are signed client-side via Freighter or Albedo. Private keys never touch Rewalf.
-                  </p>
+                    <p
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--text-secondary)',
+                        lineHeight: 1.45,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      {p.description}
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', color: 'var(--text-tertiary)', borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
+                    <span>{protoAgreements.length} Campaigns</span>
+                    <span style={{ color: 'var(--accent-lime)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                      Manage <ArrowRight size={11} />
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* 5. Recent Campaign Activity Table */}
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Recent Referral Campaign Activity
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+              Real-time Stellar escrow vault states
+            </p>
           </div>
 
-          {/* Quick Shortcuts Card */}
-          <div className="card-subtle" style={{ padding: '16px' }}>
-            <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 700, marginBottom: '12px' }}>
-              Operational Quick Actions
-            </h4>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                style={{ justifyContent: 'flex-start', padding: '8px 12px' }}
-                onClick={() => onNavigateTab('payouts')}
-              >
-                <ArrowRightLeft size={14} color="var(--accent-blue)" />
-                Audit Payout Obligations & Settlements
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                style={{ justifyContent: 'flex-start', padding: '8px 12px' }}
-                onClick={() => onNavigateTab('trace')}
-              >
-                <Clock size={14} color="var(--accent-lime)" />
-                Open Payout Trace Lifecycle Inspector
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline btn-sm"
-                style={{ justifyContent: 'flex-start', padding: '8px 12px' }}
-                onClick={onOpenWalletModal}
-              >
-                <Zap size={14} color="var(--semantic-amber)" />
-                Request Stellar Friendbot Testnet XLM
-              </button>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => onNavigateTab('campaigns')}
+          >
+            View All Campaigns ({agreements.length})
+          </button>
         </div>
+
+        {recentAgreements.length === 0 ? (
+          <div className="empty-state" style={{ padding: '36px 20px' }}>
+            <Layers size={24} style={{ color: 'var(--text-tertiary)', marginBottom: '8px' }} />
+            <h4>No Referral Campaigns Created</h4>
+            <p>Lock your first reward into an Escrow Vault on Stellar to generate referral links.</p>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={onOpenCreateCampaign}
+              style={{ marginTop: '8px' }}
+            >
+              <Plus size={13} /> Create Campaign
+            </button>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Deal & Reference</th>
+                  <th>Referral Link</th>
+                  <th>Bounty Amount</th>
+                  <th>Escrow State</th>
+                  <th>Timelock</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentAgreements.map((a) => {
+                  const isExp = a.deadline <= currentTime;
+                  return (
+                    <tr key={a.code}>
+                      <td>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{a.customerLabel}</div>
+                        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                          {a.businessName || 'SaaSify Cloud'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <a
+                          href={`/r/${a.code}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onNavigateToReferrer(a.code);
+                          }}
+                          style={{
+                            color: 'var(--accent-lime)',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '12px',
+                            textDecoration: 'none',
+                            borderBottom: '1px dashed var(--accent-lime)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                          }}
+                          title="Open referral link portal"
+                        >
+                          /r/{a.code} <ExternalLink size={10} />
+                        </a>
+                      </td>
+
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                        {a.amount} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{a.assetCode}</span>
+                      </td>
+
+                      <td>
+                        <span className={`status-badge badge-${a.state.toLowerCase()}`}>
+                          {a.state}
+                        </span>
+                      </td>
+
+                      <td style={{ fontSize: '12px', color: isExp ? 'var(--semantic-red)' : 'var(--text-secondary)' }}>
+                        {isExp ? (
+                          'Expired'
+                        ) : (
+                          new Date(a.deadline).toLocaleDateString([], { month: 'short', day: 'numeric' })
+                        )}
+                      </td>
+
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm"
+                            style={{ padding: '3px 8px', fontSize: '11px' }}
+                            onClick={() => onInspectCampaign(a)}
+                          >
+                            Inspect
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '3px 8px', fontSize: '11px' }}
+                            onClick={() => onNavigateToReferrer(a.code)}
+                          >
+                            Portal
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

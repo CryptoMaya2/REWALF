@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar, type NavigationTab } from './components/Navbar';
 import { Overview } from './components/Overview';
+import { ProtocolsView } from './components/ProtocolsView';
+import { ProtocolDetailView } from './components/ProtocolDetailView';
 import { ProgramsView } from './components/ProgramsView';
+import { ReferralLinksView } from './components/ReferralLinksView';
 import { PayoutsView } from './components/PayoutsView';
 import { ReferrerView } from './components/ReferrerView';
 import { PayoutTraceView } from './components/PayoutTraceView';
-import { SettingsView } from './components/SettingsView';
+import { IntegrationSettingsView } from './components/IntegrationSettingsView';
+import { RegisterProtocolModal } from './components/RegisterProtocolModal';
 import { CreateProgramModal } from './components/CreateProgramModal';
 import { ProgramDetailDrawer } from './components/ProgramDetailDrawer';
 import { HowItWorksModal } from './components/HowItWorksModal';
 import { WalletModal } from './components/WalletModal';
 import { LandingPage } from './components/LandingPage';
-import type { Agreement, ConnectedWallet } from './stellar/types';
+import { BusinessProfileModal } from './components/BusinessProfileModal';
+import type { Agreement, ConnectedWallet, Protocol } from './stellar/types';
 import { loadAgreements } from './store/agreementStore';
+import { loadProtocols, getProtocolById } from './store/protocolStore';
 import { loadSavedWallet } from './stellar/walletService';
 import { getAccountBalances } from './stellar/stellarService';
 
@@ -21,14 +27,36 @@ export const App: React.FC = () => {
   const [activeCode, setActiveCode] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [agreements, setAgreements] = useState<Agreement[]>([]);
+  const [protocols, setProtocols] = useState<Protocol[]>([]);
+  const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<ConnectedWallet | null>(null);
 
   // Modals and Drawers
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [businessModalOpen, setBusinessModalOpen] = useState(false);
   const [inspectAgreement, setInspectAgreement] = useState<Agreement | null>(null);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  // Refresh lists
+  const refreshAgreements = useCallback(() => {
+    const list = loadAgreements();
+    setAgreements(list);
+    setActiveCode((prev) => {
+      if (!prev && list.length > 0) return list[0].code;
+      return prev;
+    });
+  }, []);
+
+  const refreshProtocols = useCallback(() => {
+    const list = loadProtocols();
+    setProtocols(list);
+    if (!selectedProtocol && list.length > 0) {
+      setSelectedProtocol(list[0]);
+    }
+  }, [selectedProtocol]);
 
   // Parse current route from URL
   const parseRoute = useCallback(() => {
@@ -40,24 +68,38 @@ export const App: React.FC = () => {
     const hashMatch = hash.match(/^#\/r\/([a-zA-Z0-9_-]+)/);
     const queryCode = search.get('r');
 
+    const protoMatch = path.match(/^\/protocol\/([a-zA-Z0-9_-]+)/);
+    const protoHashMatch = hash.match(/^#\/protocol\/([a-zA-Z0-9_-]+)/);
+
     const code = pathMatch ? pathMatch[1] : hashMatch ? hashMatch[1] : queryCode || '';
+    const protoId = protoMatch ? protoMatch[1] : protoHashMatch ? protoHashMatch[1] : '';
 
     if (code) {
       setActiveCode(code);
       setCurrentTab('referrals');
+    } else if (protoId) {
+      const found = getProtocolById(protoId);
+      if (found) {
+        setSelectedProtocol(found);
+      }
+      setCurrentTab('protocol-detail');
     } else if (path === '/app' || hash === '#/app') {
       setCurrentTab('overview');
+    } else if (path === '/protocols' || hash === '#/protocols') {
+      setCurrentTab('protocols');
+    } else if (path === '/campaigns' || hash === '#/campaigns' || path === '/programs' || hash === '#/programs') {
+      setCurrentTab('campaigns');
+    } else if (path === '/links' || hash === '#/links') {
+      setCurrentTab('links');
+    } else if (path === '/payouts' || hash === '#/payouts') {
+      setCurrentTab('payouts');
     } else if (path === '/reclaim' || hash === '#/reclaim') {
       setCurrentTab('payouts');
       setActiveFilter('expired');
-    } else if (path === '/programs' || hash === '#/programs') {
-      setCurrentTab('programs');
-    } else if (path === '/payouts' || hash === '#/payouts') {
-      setCurrentTab('payouts');
+    } else if (path === '/integration' || hash === '#/integration' || path === '/settings' || hash === '#/settings') {
+      setCurrentTab('integration');
     } else if (path === '/trace' || hash === '#/trace') {
       setCurrentTab('trace');
-    } else if (path === '/settings' || hash === '#/settings') {
-      setCurrentTab('settings');
     } else if (path === '/overview' || hash === '#/overview') {
       setCurrentTab('overview');
     } else {
@@ -66,18 +108,10 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  const refreshAgreements = useCallback(() => {
-    const list = loadAgreements();
-    setAgreements(list);
-    setActiveCode((prev) => {
-      if (!prev && list.length > 0) return list[0].code;
-      return prev;
-    });
-  }, []);
-
   // Restore saved wallet connection on mount
   useEffect(() => {
     refreshAgreements();
+    refreshProtocols();
     parseRoute();
     window.addEventListener('popstate', parseRoute);
 
@@ -103,15 +137,21 @@ export const App: React.FC = () => {
       refreshAgreements();
     };
 
+    const handleProtocolsUpdated = () => {
+      refreshProtocols();
+    };
+
     window.addEventListener('rewalf_wallet_changed', handleWalletChanged);
     window.addEventListener('rewalf_agreements_updated', handleAgreementsUpdated);
+    window.addEventListener('rewalf_protocols_updated', handleProtocolsUpdated);
 
     return () => {
       window.removeEventListener('popstate', parseRoute);
       window.removeEventListener('rewalf_wallet_changed', handleWalletChanged);
       window.removeEventListener('rewalf_agreements_updated', handleAgreementsUpdated);
+      window.removeEventListener('rewalf_protocols_updated', handleProtocolsUpdated);
     };
-  }, [parseRoute, refreshAgreements]);
+  }, [parseRoute, refreshAgreements, refreshProtocols]);
 
   // Refresh balances
   const refreshWallets = async () => {
@@ -141,10 +181,16 @@ export const App: React.FC = () => {
       window.history.pushState(null, '', '/');
     } else if (tab === 'overview') {
       window.history.pushState(null, '', '/app');
-    } else if (tab === 'programs') {
-      window.history.pushState(null, '', '/programs');
+    } else if (tab === 'protocols') {
+      window.history.pushState(null, '', '/protocols');
+    } else if (tab === 'campaigns' || tab === 'programs') {
+      window.history.pushState(null, '', '/campaigns');
+    } else if (tab === 'links') {
+      window.history.pushState(null, '', '/links');
     } else if (tab === 'payouts') {
       window.history.pushState(null, '', '/payouts');
+    } else if (tab === 'integration' || tab === 'settings') {
+      window.history.pushState(null, '', '/integration');
     } else if (tab === 'referrals') {
       const code = activeCode || (agreements[0]?.code ?? '');
       if (code) {
@@ -155,8 +201,6 @@ export const App: React.FC = () => {
       }
     } else if (tab === 'trace') {
       window.history.pushState(null, '', '/trace');
-    } else if (tab === 'settings') {
-      window.history.pushState(null, '', '/settings');
     }
   };
 
@@ -178,6 +222,19 @@ export const App: React.FC = () => {
     refreshWallets();
   };
 
+  const handleSelectProtocol = (protocol: Protocol) => {
+    setSelectedProtocol(protocol);
+    setCurrentTab('protocol-detail');
+    window.history.pushState(null, '', `/protocol/${protocol.id}`);
+  };
+
+  const handleProtocolRegistered = (protocol: Protocol) => {
+    setSelectedProtocol(protocol);
+    refreshProtocols();
+    setCurrentTab('protocol-detail');
+    window.history.pushState(null, '', `/protocol/${protocol.id}`);
+  };
+
   if (initialLoading) {
     return (
       <div
@@ -195,7 +252,7 @@ export const App: React.FC = () => {
           R
         </div>
         <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-          Connecting to Stellar Testnet...
+          Connecting to Stellar Testnet Horizon...
         </p>
       </div>
     );
@@ -205,15 +262,10 @@ export const App: React.FC = () => {
   if (currentTab === 'landing') {
     return (
       <div className="landing-wrapper">
-        <LandingPage
-          onLaunchApp={() => handleSelectTab('overview')}
-        />
+        <LandingPage onLaunchApp={() => handleSelectTab('overview')} />
 
         {/* Protocol Guide Modal */}
-        <HowItWorksModal
-          isOpen={howItWorksOpen}
-          onClose={() => setHowItWorksOpen(false)}
-        />
+        <HowItWorksModal isOpen={howItWorksOpen} onClose={() => setHowItWorksOpen(false)} />
 
         {/* Wallet Modal */}
         <WalletModal
@@ -236,23 +288,64 @@ export const App: React.FC = () => {
         connectedWallet={connectedWallet}
         onOpenWalletModal={() => setWalletModalOpen(true)}
         onOpenHowItWorks={() => setHowItWorksOpen(true)}
+        onOpenBusinessModal={() => setBusinessModalOpen(true)}
+        onOpenRegisterModal={() => setRegisterModalOpen(true)}
       />
 
       {/* Main Workspace Body */}
       <main className="main-content">
+        {/* TAB 1: OVERVIEW */}
         {currentTab === 'overview' && (
           <Overview
+            protocols={protocols}
             agreements={agreements}
             connectedWallet={connectedWallet}
-            onOpenCreateModal={() => setCreateModalOpen(true)}
+            onOpenRegisterProtocol={() => setRegisterModalOpen(true)}
+            onSelectProtocol={handleSelectProtocol}
+            onOpenCreateCampaign={() => setCreateModalOpen(true)}
             onOpenWalletModal={() => setWalletModalOpen(true)}
             onNavigateTab={handleSelectTab}
-            onSelectAgreementForTrace={handleSelectForTrace}
-            onInspectProgram={(a) => setInspectAgreement(a)}
+            onInspectCampaign={(a) => setInspectAgreement(a)}
+            onNavigateToReferrer={handleNavigateToReferrer}
           />
         )}
 
-        {currentTab === 'programs' && (
+        {/* TAB 2: PROTOCOLS DIRECTORY */}
+        {currentTab === 'protocols' && (
+          <ProtocolsView
+            protocols={protocols}
+            agreements={agreements}
+            onOpenRegisterModal={() => setRegisterModalOpen(true)}
+            onSelectProtocol={handleSelectProtocol}
+            onOpenCreateCampaign={(p) => {
+              setSelectedProtocol(p);
+              setCreateModalOpen(true);
+            }}
+          />
+        )}
+
+        {/* TAB 3: DEDICATED PROTOCOL DETAIL PAGE */}
+        {currentTab === 'protocol-detail' && (
+          <ProtocolDetailView
+            protocol={selectedProtocol || protocols[0]}
+            agreements={agreements}
+            connectedWallet={connectedWallet}
+            onOpenCreateCampaign={(p) => {
+              setSelectedProtocol(p);
+              setCreateModalOpen(true);
+            }}
+            onNavigateToReferrer={handleNavigateToReferrer}
+            onInspectCampaign={(a) => setInspectAgreement(a)}
+            onBackToProtocols={() => handleSelectTab('protocols')}
+            onProtocolUpdated={(updated) => {
+              setSelectedProtocol(updated);
+              refreshProtocols();
+            }}
+          />
+        )}
+
+        {/* TAB 4: CAMPAIGNS */}
+        {(currentTab === 'campaigns' || currentTab === 'programs') && (
           <ProgramsView
             agreements={agreements}
             connectedWallet={connectedWallet}
@@ -264,6 +357,18 @@ export const App: React.FC = () => {
           />
         )}
 
+        {/* TAB 5: REFERRAL LINKS DIRECTORY */}
+        {currentTab === 'links' && (
+          <ReferralLinksView
+            agreements={agreements}
+            protocols={protocols}
+            onOpenCreateCampaign={() => setCreateModalOpen(true)}
+            onNavigateToReferrer={handleNavigateToReferrer}
+            onInspectCampaign={(a) => setInspectAgreement(a)}
+          />
+        )}
+
+        {/* TAB 6: PAYOUTS */}
         {currentTab === 'payouts' && (
           <PayoutsView
             agreements={agreements}
@@ -276,6 +381,18 @@ export const App: React.FC = () => {
           />
         )}
 
+        {/* TAB 7: INTEGRATION SETTINGS */}
+        {(currentTab === 'integration' || currentTab === 'settings') && (
+          <IntegrationSettingsView
+            protocols={protocols}
+            connectedWallet={connectedWallet}
+            onOpenWalletModal={() => setWalletModalOpen(true)}
+            onRefreshWallets={refreshWallets}
+            onAgreementsUpdated={refreshAgreements}
+          />
+        )}
+
+        {/* PUBLIC REFERRAL PORTAL */}
         {currentTab === 'referrals' && (
           <ReferrerView
             currentCode={activeCode}
@@ -285,25 +402,17 @@ export const App: React.FC = () => {
               setActiveCode(code);
               window.history.pushState(null, '', `/r/${code}`);
             }}
-            onNavigateToBusiness={() => handleSelectTab('programs')}
+            onNavigateToBusiness={() => handleSelectTab('campaigns')}
           />
         )}
 
+        {/* ON-CHAIN PAYOUT TRACE */}
         {currentTab === 'trace' && (
           <PayoutTraceView
             agreements={agreements}
             selectedCode={activeCode}
             onCodeSelect={(code) => setActiveCode(code)}
             onNavigateToReferrer={handleNavigateToReferrer}
-          />
-        )}
-
-        {currentTab === 'settings' && (
-          <SettingsView
-            connectedWallet={connectedWallet}
-            onOpenWalletModal={() => setWalletModalOpen(true)}
-            onRefreshWallets={refreshWallets}
-            onAgreementsUpdated={refreshAgreements}
           />
         )}
       </main>
@@ -325,14 +434,50 @@ export const App: React.FC = () => {
         }}
       />
 
-      {/* Guided Create Program Modal */}
+      {/* Guided Create Program / Campaign Modal */}
       <CreateProgramModal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         connectedWallet={connectedWallet}
         onOpenWalletModal={() => setWalletModalOpen(true)}
+        onOpenBusinessModal={() => setBusinessModalOpen(true)}
+        onOpenRegisterModal={() => setRegisterModalOpen(true)}
         onAgreementCreated={handleAgreementCreated}
         onNavigateToReferrer={handleNavigateToReferrer}
+        protocols={protocols}
+        selectedProtocol={selectedProtocol}
+      />
+
+      {/* 3-Stage Register Protocol Modal */}
+      <RegisterProtocolModal
+        isOpen={registerModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
+        connectedWallet={connectedWallet}
+        onOpenWalletModal={() => setWalletModalOpen(true)}
+        onProtocolRegistered={handleProtocolRegistered}
+      />
+
+      {/* Legacy Business Profile Modal */}
+      <BusinessProfileModal
+        isOpen={businessModalOpen}
+        onClose={() => setBusinessModalOpen(false)}
+        connectedWallet={connectedWallet}
+        onProfileSaved={() => {
+          refreshAgreements();
+          refreshProtocols();
+        }}
+      />
+
+      {/* Protocol Architecture Guide Modal */}
+      <HowItWorksModal isOpen={howItWorksOpen} onClose={() => setHowItWorksOpen(false)} />
+
+      {/* Wallet Management Modal */}
+      <WalletModal
+        isOpen={walletModalOpen}
+        onClose={() => setWalletModalOpen(false)}
+        connectedWallet={connectedWallet}
+        onWalletConnected={(wallet) => setConnectedWallet(wallet)}
+        onRefreshBalances={refreshWallets}
       />
 
       {/* Footer */}
@@ -352,21 +497,6 @@ export const App: React.FC = () => {
           All escrows and settlements are cryptographically anchored on Stellar Horizon. Private keys never touch Rewalf.
         </p>
       </footer>
-
-      {/* Protocol Architecture Guide Modal */}
-      <HowItWorksModal
-        isOpen={howItWorksOpen}
-        onClose={() => setHowItWorksOpen(false)}
-      />
-
-      {/* Wallet Management Modal */}
-      <WalletModal
-        isOpen={walletModalOpen}
-        onClose={() => setWalletModalOpen(false)}
-        connectedWallet={connectedWallet}
-        onWalletConnected={(wallet) => setConnectedWallet(wallet)}
-        onRefreshBalances={refreshWallets}
-      />
     </div>
   );
 };

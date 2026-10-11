@@ -117,30 +117,70 @@ export const ProgramDetailDrawer: React.FC<ProgramDetailDrawerProps> = ({
 
         {/* Drawer Body */}
         <div className="drawer-body">
+          {/* Target Business Website URL */}
+          <div className="card-subtle" style={{ marginBottom: '16px', padding: '12px 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                Destination Business URL
+              </span>
+              {agreement.targetUrl && (
+                <a
+                  href={`${agreement.targetUrl}${agreement.targetUrl.includes('?') ? '&' : '?'}ref=${agreement.code}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '11px', color: 'var(--accent-blue)', display: 'inline-flex', alignItems: 'center', gap: '3px', textDecoration: 'none' }}
+                >
+                  Test Link <ExternalLink size={10} />
+                </a>
+              )}
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--accent-blue)', marginTop: '4px', wordBreak: 'break-all' }}>
+              {agreement.targetUrl || agreement.businessWebsite || 'https://saasify.cloud/pricing'}
+            </div>
+          </div>
+
           {/* Primary Financial Snapshot */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '12px',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '10px',
               marginBottom: '20px',
             }}
           >
             <div className="card-subtle">
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
-                Escrow Reward
+              <span style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                Reward per Customer
               </span>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--accent-lime)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
-                {agreement.amount} {agreement.assetCode}
+              <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--accent-lime)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                {agreement.rewardPerConversion || agreement.amount} {agreement.assetCode}
               </div>
             </div>
 
             <div className="card-subtle">
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
-                Expiry Deadline
+              <span style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                Remaining Escrow
               </span>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: isExpired ? 'var(--semantic-red)' : 'var(--text-primary)', marginTop: '4px' }}>
-                {isExpired ? 'Deadline Passed' : new Date(agreement.deadline).toLocaleString()}
+              <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--semantic-green)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                {agreement.remainingBudget !== undefined ? agreement.remainingBudget : (agreement.state === 'PAID' ? '0.00' : agreement.amount)} {agreement.assetCode}
+              </div>
+            </div>
+
+            <div className="card-subtle">
+              <span style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                Total Deposited
+              </span>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                {agreement.totalBudget || agreement.amount} {agreement.assetCode}
+              </div>
+            </div>
+
+            <div className="card-subtle">
+              <span style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                Verified Customers
+              </span>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>
+                {agreement.conversionsCount || (agreement.conversions?.length || 0)} sales ({agreement.clicksCount || 0} visits)
               </div>
             </div>
           </div>
@@ -257,7 +297,12 @@ export const ProgramDetailDrawer: React.FC<ProgramDetailDrawerProps> = ({
                   readOnly
                   value={referrerUrl}
                   className="form-input font-mono"
-                  style={{ fontSize: '12px', background: 'var(--surface-input)' }}
+                  style={{ fontSize: '12px', background: 'var(--surface-input)', cursor: 'pointer' }}
+                  onClick={() => {
+                    onClose();
+                    onNavigateToReferrer(agreement.code);
+                  }}
+                  title="Click to open referrer portal"
                 />
                 <button
                   type="button"
@@ -279,6 +324,21 @@ export const ProgramDetailDrawer: React.FC<ProgramDetailDrawerProps> = ({
                 >
                   Open Portal <ArrowRight size={13} />
                 </button>
+              </div>
+
+              <div style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
+                👉 Click link to open:{' '}
+                <a
+                  href={`/r/${agreement.code}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onClose();
+                    onNavigateToReferrer(agreement.code);
+                  }}
+                  style={{ color: 'var(--accent-lime)', textDecoration: 'underline', cursor: 'pointer' }}
+                >
+                  {referrerUrl}
+                </a>
               </div>
 
               {/* Fast Forward & Reclaim Controls */}

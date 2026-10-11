@@ -11,9 +11,24 @@ import {
   Settings,
   Activity,
   Globe,
+  Building2,
+  Link as LinkIcon,
+  Plus,
 } from 'lucide-react';
 
-export type NavigationTab = 'landing' | 'overview' | 'programs' | 'referrals' | 'payouts' | 'trace' | 'settings';
+export type NavigationTab =
+  | 'landing'
+  | 'overview'
+  | 'protocols'
+  | 'protocol-detail'
+  | 'campaigns'
+  | 'programs'
+  | 'links'
+  | 'referrals'
+  | 'payouts'
+  | 'trace'
+  | 'settings'
+  | 'integration';
 
 interface NavbarProps {
   currentTab: NavigationTab;
@@ -21,6 +36,8 @@ interface NavbarProps {
   connectedWallet: ConnectedWallet | null;
   onOpenWalletModal: () => void;
   onOpenHowItWorks: () => void;
+  onOpenBusinessModal: () => void;
+  onOpenRegisterModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -29,6 +46,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   connectedWallet,
   onOpenWalletModal,
   onOpenHowItWorks,
+  onOpenBusinessModal,
+  onOpenRegisterModal,
 }) => {
   const handleNavClick = (tab: NavigationTab) => {
     onSelectTab(tab);
@@ -71,13 +90,33 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
+              id="nav-protocols-btn"
+              type="button"
+              className={`nav-tab-btn ${currentTab === 'protocols' || currentTab === 'protocol-detail' ? 'active' : ''}`}
+              onClick={() => handleNavClick('protocols')}
+            >
+              <Building2 size={14} />
+              Protocols
+            </button>
+
+            <button
               id="nav-business-btn"
               type="button"
-              className={`nav-tab-btn ${currentTab === 'programs' ? 'active' : ''}`}
-              onClick={() => handleNavClick('programs')}
+              className={`nav-tab-btn ${currentTab === 'campaigns' || currentTab === 'programs' ? 'active' : ''}`}
+              onClick={() => handleNavClick('campaigns')}
             >
               <Layers size={14} />
-              Programs
+              Campaigns
+            </button>
+
+            <button
+              id="nav-links-btn"
+              type="button"
+              className={`nav-tab-btn ${currentTab === 'links' ? 'active' : ''}`}
+              onClick={() => handleNavClick('links')}
+            >
+              <LinkIcon size={14} />
+              Referral Links
             </button>
 
             <button
@@ -91,13 +130,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
+              id="nav-integration-btn"
+              type="button"
+              className={`nav-tab-btn ${currentTab === 'integration' || currentTab === 'settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick('integration')}
+            >
+              <Settings size={14} />
+              Integration
+            </button>
+
+            <button
               id="nav-referrer-btn"
               type="button"
               className={`nav-tab-btn ${currentTab === 'referrals' ? 'active' : ''}`}
               onClick={() => handleNavClick('referrals')}
             >
               <ShieldCheck size={14} />
-              Referral Portal
+              Portal
             </button>
 
             <button
@@ -107,17 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => handleNavClick('trace')}
             >
               <Clock size={14} />
-              Payout Trace
-            </button>
-
-            <button
-              id="nav-settings-btn"
-              type="button"
-              className={`nav-tab-btn ${currentTab === 'settings' ? 'active' : ''}`}
-              onClick={() => handleNavClick('settings')}
-            >
-              <Settings size={14} />
-              Settings
+              Trace
             </button>
 
             {/* Hidden backwards compatibility trigger for test suites checking nav-reclaim-btn */}
@@ -137,6 +176,31 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="pulse-dot" />
               Stellar Testnet
             </div>
+
+            {onOpenRegisterModal && (
+              <button
+                id="nav-register-protocol-btn"
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={onOpenRegisterModal}
+                style={{ fontWeight: 700 }}
+                title="Register your website or web3 product"
+              >
+                <Plus size={13} />
+                Add Protocol
+              </button>
+            )}
+
+            <button
+              id="business-profile-btn"
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={onOpenBusinessModal}
+              title="Register and brand your business profile"
+            >
+              <Building2 size={14} />
+              Business
+            </button>
 
             <button
               id="how-it-works-btn"

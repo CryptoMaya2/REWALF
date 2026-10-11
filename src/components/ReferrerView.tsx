@@ -9,6 +9,8 @@ import {
   getAgreementByCode,
   loadAgreements,
   updateAgreementState,
+  recordReferralClick,
+  verifyCustomerConversion,
 } from '../store/agreementStore';
 import { PayoutTrace } from './PayoutTrace';
 import confetti from 'canvas-confetti';
@@ -21,6 +23,11 @@ import {
   Clock,
   Sparkles,
   Zap,
+  Copy,
+  Check,
+  Globe,
+  ArrowUpRight,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface ReferrerViewProps {
@@ -43,8 +50,15 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
   const [claimProgress, setClaimProgress] = useState('');
   const [errorDetail, setErrorDetail] = useState<HorizonErrorDetail | null>(null);
   const [allAgreements, setAllAgreements] = useState<Agreement[]>([]);
+  const [copied, setCopied] = useState(false);
 
-  // Load agreement — memoized so it can safely go in useEffect deps
+  // Conversion verification simulator state
+  const [testOrderId, setTestOrderId] = useState(`ORD-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [testCustomerName, setTestCustomerName] = useState('');
+  const [verificationFeedback, setVerificationFeedback] = useState<{ success: boolean; msg: string; fraudAlert?: string } | null>(null);
+  const [verifying, setVerifying] = useState(false);
+
+  // Load agreement
   const reloadAgreement = useCallback(() => {
     const list = loadAgreements();
     setAllAgreements(list);
@@ -70,14 +84,56 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
     return () => window.removeEventListener('rewalf_agreements_updated', handleUpdate);
   }, [reloadAgreement]);
 
-  // Demo action: Mark customer paid
-  const handleMarkCustomerPaid = () => {
+  // Handle direct click-through to business URL with ?ref=CODE
+  const handleVisitBusinessWebsite = () => {
     if (!agreement) return;
-    const updated = updateAgreementState(agreement.code, 'PAID', {
-      paidTxHash: `sim_${Date.now().toString(16)}`,
-    });
-    if (updated) {
-      setAgreement({ ...updated });
+
+    recordReferralClick(agreement.code);
+
+    const baseUrl = agreement.targetUrl || agreement.businessWebsite || 'https://saasify.cloud/pricing';
+    const redirectUrl = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}ref=${agreement.code}`;
+
+    window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+
+    // Reload state to reflect click count increment
+    reloadAgreement();
+  };
+
+  // Authenticate customer conversion with anti-fraud safeguards
+  const handleAuthenticateConversion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!agreement) return;
+
+    setVerifying(true);
+    setVerificationFeedback(null);
+
+    try {
+      const res = verifyCustomerConversion({
+        campaignCode: agreement.code,
+        orderId: testOrderId.trim(),
+        customerLabel: testCustomerName.trim() || agreement.customerLabel,
+        referrerAddress: agreement.referrerAddress,
+        callerAddress: connectedWallet?.publicKey,
+        verificationMethod: 'hmac_webhook',
+      });
+
+      if (res.success && res.agreement) {
+        setAgreement({ ...res.agreement });
+        setVerificationFeedback({
+          success: true,
+          msg: `Verified Order #${res.conversion?.orderId}! Reward unlocked for claim on Stellar testnet.`,
+        });
+        setTestOrderId(`ORD-${Math.floor(1000 + Math.random() * 9000)}`);
+        setTestCustomerName('');
+      } else {
+        setVerificationFeedback({
+          success: false,
+          msg: res.error || 'Conversion verification rejected.',
+          fraudAlert: res.fraudAlert,
+        });
+      }
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -85,7 +141,7 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
   const handleClaimReward = async () => {
     if (!agreement) return;
     if (agreement.state !== 'PAID') {
-      alert('Reward can only be claimed once the customer is marked paid.');
+      alert('Reward can only be claimed once customer action is verified.');
       return;
     }
 
@@ -155,26 +211,104 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
     );
   }
 
+  const targetWebsiteUrl = agreement.targetUrl || agreement.businessWebsite || 'https://saasify.cloud/pricing';
+  const customerRedirectUrl = `${targetWebsiteUrl}${targetWebsiteUrl.includes('?') ? '&' : '?'}ref=${agreement.code}`;
+  const remainingBudget = parseFloat(agreement.remainingBudget !== undefined ? agreement.remainingBudget : (agreement.state === 'PAID' || agreement.state === 'CLAIMED' ? '0' : agreement.amount));
+  const totalBudget = parseFloat(agreement.totalBudget || agreement.amount);
+
   return (
     <div style={{ maxWidth: '880px', margin: '0 auto' }}>
       {/* Switcher if multiple agreements exist */}
       {allAgreements.length > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Switch referral agreement:</span>
-          <select
-            value={agreement.code}
-            onChange={(e) => onCodeChange(e.target.value)}
-            className="form-select font-mono"
-            style={{ width: 'auto', padding: '5px 10px', fontSize: '12px' }}
-          >
-            {allAgreements.map((a) => (
-              <option key={a.code} value={a.code}>
-                #{a.code} — {a.customerLabel} ({a.amount} {a.assetCode} [{a.state}])
-              </option>
-            ))}
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="status-badge badge-active" style={{ fontSize: '11px' }}>
+              Public Referral Portal
+            </span>
+            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
+              Non-custodial escrow payouts on Stellar Testnet
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Switch campaign:</span>
+            <select
+              value={agreement.code}
+              onChange={(e) => onCodeChange(e.target.value)}
+              className="form-select font-mono"
+              style={{ width: 'auto', padding: '5px 10px', fontSize: '12px' }}
+            >
+              {allAgreements.map((a) => (
+                <option key={a.code} value={a.code}>
+                  #{a.code} — {a.customerLabel} ({a.amount} {a.assetCode} [{a.state}])
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
+
+      {/* DIRECT BUSINESS WEBSITE REDIRECTION CARD */}
+      <div
+        className="card"
+        style={{
+          background: 'linear-gradient(180deg, var(--surface-card) 0%, var(--surface-subtle) 100%)',
+          border: '1px solid var(--accent-lime-border)',
+          padding: '20px',
+          marginBottom: '20px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <Globe size={16} color="var(--accent-lime)" />
+              <span style={{ fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--accent-lime)', fontWeight: 700 }}>
+                Target Business Website Destination
+              </span>
+            </div>
+            <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Customer Link Redirection: {agreement.businessName || 'Protocol Partner'}
+            </h3>
+            <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              When potential customers click this referral link, they are redirected directly to the business offering with your referral tag attached:
+            </p>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '12px',
+                color: 'var(--accent-blue)',
+                marginTop: '8px',
+                padding: '6px 10px',
+                background: 'var(--surface-input)',
+                borderRadius: 'var(--radius-xs)',
+                display: 'inline-block',
+                maxWidth: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                wordBreak: 'break-all',
+              }}
+            >
+              {customerRedirectUrl}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px' }}>
+            <button
+              id="visit-business-btn"
+              type="button"
+              className="btn btn-primary"
+              onClick={handleVisitBusinessWebsite}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            >
+              <ArrowUpRight size={16} />
+              Visit Business Website
+            </button>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+              {agreement.clicksCount || 0} visits recorded so far
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Recipient Wallet Context Strip */}
       <div
@@ -221,21 +355,111 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
       </div>
 
       {/* Primary Reward Agreement Card */}
-      <div className="card" style={{ marginBottom: '24px' }}>
+      <div className="card card-glow" style={{ marginBottom: '24px' }}>
+        {/* Registered Company Branding Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+            paddingBottom: '16px',
+            marginBottom: '20px',
+            borderBottom: '1px solid var(--border-subtle)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--accent-lime-subtle)',
+                border: '1px solid var(--accent-lime-border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--accent-lime)',
+                fontWeight: 800,
+                fontSize: '18px',
+              }}
+            >
+              {agreement.businessName ? agreement.businessName.charAt(0).toUpperCase() : 'B'}
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {agreement.businessName || 'SaaSify Cloud Infrastructure'}
+                </span>
+                <span
+                  style={{
+                    fontSize: '10.5px',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-full)',
+                    background: 'var(--accent-lime-subtle)',
+                    color: 'var(--accent-lime)',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                  }}
+                >
+                  <ShieldCheck size={11} /> Verified Business Escrow
+                </span>
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                {agreement.businessCategory || 'B2B SaaS / Cloud'}
+                {agreement.businessWebsite && (
+                  <>
+                    {' • '}
+                    <a
+                      href={customerRedirectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: 'var(--accent-blue)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                    >
+                      {agreement.businessWebsite.replace(/^https?:\/\//, '')} <ExternalLink size={10} />
+                    </a>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', background: 'var(--surface-input)', padding: '5px 10px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>Referral Portal:</span>
+              <span style={{ color: 'var(--accent-lime)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                /r/{agreement.code}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/r/${agreement.code}`);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 0, display: 'inline-flex', alignItems: 'center' }}
+                title="Copy portal URL"
+              >
+                {copied ? <Check size={13} color="var(--accent-lime)" /> : <Copy size={13} />}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-tertiary)', fontWeight: 700 }}>
-                Stellar Escrow Agreement
-              </span>
-              <span className="network-badge" style={{ padding: '2px 6px', fontSize: '11px' }}>
-                #{agreement.code}
+                Bounty per Verified Customer Action
               </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               <span style={{ fontSize: '40px', fontWeight: 800, color: 'var(--accent-lime)', fontFamily: 'var(--font-mono)', letterSpacing: '-1px' }}>
-                {agreement.amount}
+                {agreement.rewardPerConversion || agreement.amount}
               </span>
               <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                 {agreement.assetCode}
@@ -254,6 +478,9 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
             <span style={{ fontSize: '12px', color: isExpired ? 'var(--semantic-red)' : 'var(--text-tertiary)' }}>
               {isExpired ? '⚠️ Deadline Passed' : `Expiry: ${new Date(agreement.deadline).toLocaleString()}`}
             </span>
+            <div style={{ fontSize: '11.5px', color: 'var(--semantic-green)', fontFamily: 'var(--font-mono)' }}>
+              Escrow Backing: {remainingBudget.toFixed(2)} / {totalBudget.toFixed(2)} {agreement.assetCode}
+            </div>
           </div>
         </div>
 
@@ -271,16 +498,16 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
               <Lock size={13} /> 1. Money in Vault
             </div>
             <p style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
-              The reward is already deposited and waiting in escrow.
+              The reward is deposited into an isolated Stellar vault account.
             </p>
           </div>
 
           <div className="card-subtle" style={{ padding: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-blue)', fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>
-              <ShieldCheck size={13} /> 2. Locked For You
+              <ShieldCheck size={13} /> 2. Results, Not Clicks
             </div>
             <p style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
-              The business cannot redirect your reward to anyone else.
+              Rewards trigger when customer visits and completes payment.
             </p>
           </div>
 
@@ -289,7 +516,7 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
               <Sparkles size={13} /> 3. Instant Claim
             </div>
             <p style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
-              When the customer pays, your reward unlocks immediately.
+              When verified, claim unlocks on-chain for the referrer.
             </p>
           </div>
 
@@ -318,41 +545,84 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
           </div>
         )}
 
-        {/* Demo Customer Payment Simulator */}
-        {agreement.state === 'LOCKED' && (
-          <div
-            id="demo-payment-simulator-box"
-            className="card-subtle"
-            style={{
-              padding: '16px',
-              border: '1px solid var(--accent-blue-border)',
-              background: 'var(--accent-blue-subtle)',
-              marginBottom: '20px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-blue)', fontWeight: 700, fontSize: '13.5px' }}>
-                  <Zap size={15} />
-                  Demo Action: Customer Payment Confirmation Simulator
-                </div>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  In production, this is triggered via webhook or payment oracle. Click to confirm customer payment receipt.
-                </p>
-              </div>
-
-              <button
-                id="mark-paid-btn"
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={handleMarkCustomerPaid}
-              >
-                <Zap size={14} />
-                Mark Customer Paid
-              </button>
-            </div>
+        {/* AUTHENTICATED CUSTOMER ACTION / CONVERSION VERIFICATION SIMULATOR */}
+        <div
+          id="demo-payment-simulator-box"
+          className="card-subtle"
+          style={{
+            padding: '16px',
+            border: '1px solid var(--accent-blue-border)',
+            background: 'var(--accent-blue-subtle)',
+            marginBottom: '20px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-blue)', fontWeight: 700, fontSize: '13.5px', marginBottom: '6px' }}>
+            <Zap size={15} />
+            Test & Verify Customer Action (Order / Purchase Verification)
           </div>
-        )}
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
+            In production, verified customer orders are triggered via webhook or client SDK. Use this simulator to test anti-fraud validation, escrow deduction, and reward unlock.
+          </p>
+
+          <form onSubmit={handleAuthenticateConversion} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', alignItems: 'flex-end' }}>
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                Customer Order / Invoice ID
+              </label>
+              <input
+                type="text"
+                required
+                value={testOrderId}
+                onChange={(e) => setTestOrderId(e.target.value)}
+                className="form-input font-mono"
+                style={{ fontSize: '12px' }}
+                placeholder="e.g. ORD-9481-USDC"
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                Customer Reference (Optional)
+              </label>
+              <input
+                type="text"
+                value={testCustomerName}
+                onChange={(e) => setTestCustomerName(e.target.value)}
+                className="form-input"
+                style={{ fontSize: '12px' }}
+                placeholder={agreement.customerLabel}
+              />
+            </div>
+
+            <button
+              id="mark-paid-btn"
+              type="submit"
+              className="btn btn-primary"
+              disabled={verifying}
+              style={{ padding: '8px 14px', fontSize: '12.5px' }}
+            >
+              <ShieldCheck size={14} />
+              Verify & Unlock Reward
+            </button>
+          </form>
+
+          {verificationFeedback && (
+            <div
+              className={`alert-box ${verificationFeedback.success ? 'alert-info' : 'alert-error'}`}
+              style={{ marginTop: '12px' }}
+            >
+              {verificationFeedback.success ? <CheckCircle2 size={16} /> : <ShieldAlert size={16} />}
+              <div>
+                {verificationFeedback.fraudAlert && (
+                  <div style={{ fontWeight: 700, color: 'var(--semantic-red)', marginBottom: '2px' }}>
+                    🛡️ {verificationFeedback.fraudAlert}
+                  </div>
+                )}
+                <div style={{ fontSize: '12px' }}>{verificationFeedback.msg}</div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Error Banner */}
         {errorDetail && (
@@ -377,10 +647,10 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
                 style={{ width: '100%', opacity: 0.5 }}
               >
                 <Lock size={16} />
-                Claim Locked (Waiting for Customer Payment)
+                Claim Locked (Waiting for Verified Customer Purchase)
               </button>
               <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
-                The claim action unlocks on-chain as soon as the deal payment is confirmed.
+                The claim action unlocks on-chain as soon as an order is verified.
               </p>
             </div>
           )}
@@ -392,7 +662,7 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
                 <div>
                   <strong>Customer Payment Verified!</strong>
                   <p style={{ fontSize: '12.5px', marginTop: '2px' }}>
-                    Binary condition is satisfied. You can submit the on-chain payment transaction to transfer the reward now.
+                    Reward condition is verified. Submit the on-chain payout transaction to transfer funds to your wallet now.
                   </p>
                 </div>
               </div>
@@ -413,7 +683,7 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
                 ) : (
                   <>
                     <Sparkles size={16} />
-                    <span>Claim {agreement.amount} {agreement.assetCode} on Stellar Testnet</span>
+                    <span>Claim {agreement.rewardPerConversion || agreement.amount} {agreement.assetCode} on Stellar Testnet</span>
                   </>
                 )}
               </button>
@@ -421,73 +691,77 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
           )}
 
           {agreement.state === 'CLAIMED' && (
-            <div
-              id="claim-success-card"
-              className="card-subtle"
-              style={{
-                padding: '20px',
-                border: '1px solid var(--semantic-green-border)',
-                background: 'var(--semantic-green-subtle)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--semantic-green)', marginBottom: '8px' }}>
-                <CheckCircle2 size={20} />
-                <h3 style={{ fontSize: '16px', fontWeight: 700 }}>
-                  Reward Claimed & Settled on Stellar!
-                </h3>
+            <div className="alert-box alert-success" style={{ textAlign: 'center', justifyContent: 'center' }}>
+              <CheckCircle2 size={18} />
+              <div>
+                <strong>Reward Successfully Claimed & Settled on Stellar!</strong>
+                {agreement.claimTxHash && (
+                  <div style={{ marginTop: '4px' }}>
+                    <a
+                      href={getStellarExpertTxUrl(agreement.claimTxHash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: 'var(--accent-lime)', textDecoration: 'underline', fontSize: '12px' }}
+                    >
+                      View Claim Tx on Stellar Expert <ExternalLink size={10} />
+                    </a>
+                  </div>
+                )}
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '12px' }}>
-                The reward was transferred from the Escrow Vault directly to your registered destination key:
-                <br />
-                <code style={{ fontSize: '12px', color: 'var(--accent-lime)' }}>{agreement.referrerAddress}</code>
-              </p>
-
-              {agreement.claimTxHash && (
-                <div className="trace-evidence">
-                  <span style={{ color: 'var(--text-tertiary)' }}>Claim Tx Hash:</span>
-                  <a
-                    id="claim-tx-link"
-                    href={getStellarExpertTxUrl(agreement.claimTxHash)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span>{agreement.claimTxHash}</span>
-                    <ExternalLink size={12} />
-                  </a>
-                </div>
-              )}
-            </div>
-          )}
-
-          {agreement.state === 'RECLAIMED' && (
-            <div
-              id="reclaimed-notice-card"
-              className="card-subtle"
-              style={{
-                padding: '16px',
-                border: '1px solid var(--semantic-amber-border)',
-                background: 'var(--semantic-amber-subtle)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--semantic-amber)', marginBottom: '6px' }}>
-                <Clock size={16} />
-                <h3 style={{ fontSize: '15px', fontWeight: 700 }}>
-                  Agreement Expired & Reclaimed by Business
-                </h3>
-              </div>
-              <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-                The deadline passed without customer payment confirmation. The business has reclaimed the escrowed deposit on Stellar.
-              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Embedded Payout Trace for this agreement */}
-      <div className="card">
-        <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '14px', color: 'var(--text-primary)' }}>
-          Referral Reward Verification Trace
-        </h3>
+      {/* VERIFIED CONVERSIONS AUDIT LOG FOR THIS CAMPAIGN */}
+      {agreement.conversions && agreement.conversions.length > 0 && (
+        <div className="card" style={{ marginBottom: '24px', padding: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <CheckCircle2 size={16} color="var(--accent-lime)" />
+            <h4 style={{ fontSize: '14px', fontWeight: 700 }}>
+              Verified Conversions Audit Log ({agreement.conversions.length})
+            </h4>
+          </div>
+
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer Label</th>
+                  <th>Reward</th>
+                  <th>Timestamp</th>
+                  <th>Adapter</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agreement.conversions.map((conv) => (
+                  <tr key={conv.id}>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--accent-lime)' }}>
+                      {conv.orderId}
+                    </td>
+                    <td>{conv.customerLabel}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--semantic-green)', fontWeight: 600 }}>
+                      +{conv.rewardAmount} {conv.assetCode}
+                    </td>
+                    <td style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>
+                      {new Date(conv.verifiedAt).toLocaleString()}
+                    </td>
+                    <td>
+                      <span className="status-badge badge-locked" style={{ fontSize: '10px' }}>
+                        {conv.verificationMethod === 'hmac_webhook' ? 'HMAC Webhook' : 'Client SDK'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Payout Lifecycle Trace */}
+      <div style={{ marginTop: '30px' }}>
         <PayoutTrace agreement={agreement} />
       </div>
     </div>

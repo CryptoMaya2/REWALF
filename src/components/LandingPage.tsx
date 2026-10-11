@@ -6,6 +6,10 @@ import {
   Building2,
   TrendingUp,
   RotateCcw,
+  ShieldCheck,
+  Lock,
+  Zap,
+  Sparkles,
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -49,15 +53,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   ];
 
   return (
-    <div className="landing-container" style={{ minHeight: '100vh', background: 'var(--bg-canvas)' }}>
+    <div className="landing-container" style={{ minHeight: '100vh', background: 'transparent' }}>
       {/* 1. Header Navigation */}
       <header
         style={{
           position: 'sticky',
           top: 0,
           zIndex: 40,
-          background: 'rgba(17, 20, 17, 0.88)',
-          backdropFilter: 'blur(16px)',
+          background: 'rgba(10, 13, 10, 0.82)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1px solid var(--border-subtle)',
           padding: '0 24px',
           height: 'var(--header-height)',
@@ -66,26 +71,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           justifyContent: 'space-between',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+        <div
+          onClick={onLaunchApp}
+          style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          title="Launch Protocol App"
+        >
           <div className="brand-logo-badge">R</div>
           <div>
-            <span style={{ fontWeight: 800, fontSize: '18px', letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+            <span style={{ fontWeight: 800, fontSize: '18px', letterSpacing: '-0.02em', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
               Rewalf
             </span>
             <span
               style={{
                 marginLeft: '8px',
-                fontSize: '11px',
-                padding: '2px 8px',
+                fontSize: '10px',
+                padding: '3px 9px',
                 borderRadius: 'var(--radius-full)',
                 background: 'var(--accent-lime-subtle)',
                 color: 'var(--accent-lime)',
                 border: '1px solid var(--accent-lime-border)',
-                fontWeight: 600,
-                letterSpacing: '0.04em',
+                fontWeight: 700,
+                letterSpacing: '0.06em',
               }}
             >
-              TRUSTLESS REFERRALS
+              STELLAR TESTNET
             </span>
           </div>
         </div>
@@ -130,23 +139,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             onClick={onLaunchApp}
             className="btn btn-primary"
             style={{
-              padding: '8px 18px',
+              padding: '9px 20px',
               fontSize: '13.5px',
               fontWeight: 700,
-              boxShadow: '0 0 20px rgba(184, 243, 107, 0.25)',
             }}
           >
-            Open App <ArrowRight size={15} />
+            Launch Dashboard <ArrowRight size={15} />
           </button>
         </div>
       </header>
 
-      {/* 2. Hero Section: Clear, Human, Welcoming */}
+      {/* 2. Hero Section: High Impact, Atmospheric, Web3 Fintech */}
       <section
         style={{
-          maxWidth: '1200px',
+          maxWidth: '1240px',
           margin: '0 auto',
-          padding: '70px 24px 50px',
+          padding: '80px 24px 40px',
           textAlign: 'center',
           position: 'relative',
         }}
@@ -155,69 +163,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div
           style={{
             position: 'absolute',
-            top: '20px',
+            top: '0',
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '600px',
-            height: '300px',
-            background: 'radial-gradient(circle, rgba(184, 243, 107, 0.08) 0%, rgba(17, 20, 17, 0) 70%)',
+            width: '750px',
+            height: '350px',
+            background: 'radial-gradient(ellipse at 50% 30%, rgba(184, 243, 107, 0.12) 0%, rgba(112, 183, 255, 0.05) 50%, transparent 75%)',
             pointerEvents: 'none',
             zIndex: 0,
           }}
         />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          {/* Simple status pill */}
+          {/* Status pill with animated radar dot */}
           <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 16px',
-              borderRadius: 'var(--radius-full)',
-              background: 'var(--surface-card)',
-              border: '1px solid var(--border-card)',
-              fontSize: '12.5px',
-              fontWeight: 600,
-              color: 'var(--text-secondary)',
-              marginBottom: '24px',
-            }}
+            className="glass-pill"
+            style={{ marginBottom: '28px' }}
           >
             <span
               style={{
-                width: '8px',
-                height: '8px',
+                width: '7px',
+                height: '7px',
                 borderRadius: '50%',
                 background: 'var(--accent-lime)',
-                boxShadow: '0 0 8px var(--accent-lime)',
+                boxShadow: '0 0 10px var(--accent-lime)',
                 display: 'inline-block',
               }}
             />
-            <span>Instant & Guaranteed Referral Payouts</span>
-            <span style={{ color: 'var(--border-subtle)' }}>•</span>
-            <span style={{ color: 'var(--accent-lime)' }}>Powered by Stellar Escrow</span>
+            <span style={{ color: 'var(--text-secondary)' }}>Instant & Guaranteed Referral Payouts</span>
+            <span style={{ color: 'var(--border-card)' }}>•</span>
+            <span style={{ color: 'var(--accent-lime)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Sparkles size={12} /> Powered by Stellar Escrow
+            </span>
           </div>
 
-          {/* Natural Human Headline */}
+          {/* Natural Human Headline with subtle gradient */}
           <h1
             style={{
-              fontSize: 'clamp(34px, 5.5vw, 62px)',
+              fontSize: 'clamp(38px, 6vw, 68px)',
               fontWeight: 800,
-              lineHeight: 1.15,
-              letterSpacing: '-0.025em',
+              lineHeight: 1.12,
+              letterSpacing: '-0.03em',
               color: 'var(--text-primary)',
-              maxWidth: '920px',
-              margin: '0 auto 20px',
+              maxWidth: '960px',
+              margin: '0 auto 24px',
+              fontFamily: 'var(--font-display)',
             }}
           >
             Referral rewards that pay out{' '}
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #B8F36B 0%, #70B7FF 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
+            <span className="gradient-text-lime">
               automatically
             </span>{' '}
             when customers buy.
@@ -226,11 +220,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Conversational Explanation */}
           <p
             style={{
-              fontSize: 'clamp(16px, 1.8vw, 19px)',
-              lineHeight: 1.6,
+              fontSize: 'clamp(16px, 1.9vw, 20px)',
+              lineHeight: 1.65,
               color: 'var(--text-secondary)',
-              maxWidth: '740px',
-              margin: '0 auto 36px',
+              maxWidth: '780px',
+              margin: '0 auto 40px',
             }}
           >
             No unpaid invoices. No chasing payments for 60 days.
@@ -240,15 +234,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </p>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '56px' }}>
             <button
               onClick={onLaunchApp}
-              className="btn btn-primary"
+              className="btn btn-primary btn-lg"
               style={{
-                padding: '14px 28px',
-                fontSize: '15px',
                 fontWeight: 700,
-                boxShadow: '0 0 25px rgba(184, 243, 107, 0.3)',
               }}
             >
               Launch Dashboard <ArrowRight size={17} />
@@ -256,15 +247,72 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <a
               href="#simulator"
-              className="btn btn-outline"
+              className="btn btn-secondary btn-lg"
               style={{
-                padding: '14px 24px',
-                fontSize: '15px',
                 textDecoration: 'none',
               }}
             >
               Try 10-Second Demo ↓
             </a>
+          </div>
+
+          {/* 4 Protocol Counters Strip */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '16px',
+              maxWidth: '1060px',
+              margin: '0 auto',
+            }}
+          >
+            <div className="stat-counter-box">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
+                <Lock size={12} style={{ color: 'var(--accent-lime)' }} /> Escrow Security
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+                100% Locked
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Funds protected on-chain upfront
+              </div>
+            </div>
+
+            <div className="stat-counter-box">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
+                <Zap size={12} style={{ color: 'var(--accent-blue)' }} /> Stellar Speed
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--accent-blue)', fontFamily: 'var(--font-mono)' }}>
+                3.2s Payout
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Direct settlement into referrer wallet
+              </div>
+            </div>
+
+            <div className="stat-counter-box">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
+                <ShieldCheck size={12} style={{ color: 'var(--semantic-green)' }} /> Non-Custodial
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--semantic-green)', fontFamily: 'var(--font-mono)' }}>
+                Zero Risk
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                No platform custody of your keys
+              </div>
+            </div>
+
+            <div className="stat-counter-box">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
+                <RotateCcw size={12} style={{ color: 'var(--semantic-amber)' }} /> Timelock Safety
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--semantic-amber)', fontFamily: 'var(--font-mono)' }}>
+                100% Refund
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Full reclaim if no deal closes
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -273,32 +321,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section
         id="simulator"
         style={{
-          maxWidth: '960px',
-          margin: '20px auto 70px',
+          maxWidth: '1020px',
+          margin: '20px auto 80px',
           padding: '0 24px',
         }}
       >
-        <div
-          style={{
-            padding: '32px',
-            borderRadius: 'var(--radius-lg)',
-            background: 'var(--surface-card)',
-            border: '1px solid var(--border-card)',
-            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.4)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+        <div className="interactive-demo-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '28px' }}>
             <div>
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--accent-lime)', fontWeight: 700, letterSpacing: '0.08em' }}>
-                INTERACTIVE SIMULATOR
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--accent-lime)', fontWeight: 800, letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-lime)' }} />
+                INTERACTIVE FLOW SIMULATOR
               </div>
-              <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px' }}>
-                See how Rewalf works in 10 seconds:
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px', fontFamily: 'var(--font-display)' }}>
+                See how trustless referral escrow settles in real time:
               </h2>
             </div>
 
             {/* Toggle Scenario */}
-            <div style={{ display: 'flex', gap: '8px', background: 'var(--surface-input)', padding: '4px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ display: 'flex', gap: '6px', background: 'rgba(16, 20, 16, 0.8)', padding: '5px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -306,7 +347,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setSimulatorStep(1);
                 }}
                 style={{
-                  padding: '6px 12px',
+                  padding: '7px 14px',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '12px',
                   fontWeight: 600,
@@ -314,9 +355,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   cursor: 'pointer',
                   background: simulatorScenario === 'success' ? 'var(--surface-subtle)' : 'transparent',
                   color: simulatorScenario === 'success' ? 'var(--accent-lime)' : 'var(--text-secondary)',
+                  transition: 'all 0.15s ease',
+                  boxShadow: simulatorScenario === 'success' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
                 }}
               >
-                Happy Path (Deal Closed)
+                Deal Closed (Instant Payout)
               </button>
               <button
                 type="button"
@@ -325,7 +368,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setSimulatorStep(1);
                 }}
                 style={{
-                  padding: '6px 12px',
+                  padding: '7px 14px',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '12px',
                   fontWeight: 600,
@@ -333,50 +376,68 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   cursor: 'pointer',
                   background: simulatorScenario === 'refund' ? 'var(--surface-subtle)' : 'transparent',
                   color: simulatorScenario === 'refund' ? 'var(--semantic-amber)' : 'var(--text-secondary)',
+                  transition: 'all 0.15s ease',
+                  boxShadow: simulatorScenario === 'refund' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
                 }}
               >
-                No Deal (Automatic Refund)
+                Deal Timed Out (100% Refund)
               </button>
             </div>
           </div>
 
           {/* Interactive Steps Bar */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '32px' }}>
             <button
               type="button"
               onClick={() => setSimulatorStep(1)}
               style={{
-                padding: '12px',
+                padding: '14px 16px',
                 borderRadius: 'var(--radius-md)',
-                background: simulatorStep >= 1 ? 'var(--surface-subtle)' : 'transparent',
+                background: simulatorStep >= 1 ? 'rgba(36, 44, 36, 0.7)' : 'rgba(20, 24, 20, 0.4)',
                 border: simulatorStep === 1 ? '1px solid var(--accent-lime)' : '1px solid var(--border-subtle)',
                 color: 'var(--text-primary)',
                 textAlign: 'left',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                transition: 'all 0.2s ease',
+                boxShadow: simulatorStep === 1 ? '0 0 16px rgba(184, 243, 107, 0.15)' : 'none',
               }}
             >
-              <div style={{ fontSize: '11px', color: 'var(--accent-lime)', fontWeight: 700 }}>STEP 1</div>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>Business Locks $50</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '11px', color: 'var(--accent-lime)', fontWeight: 800 }}>STEP 01</span>
+                <span className={`step-indicator-pill ${simulatorStep === 1 ? 'active' : simulatorStep > 1 ? 'completed' : 'inactive'}`}>
+                  1
+                </span>
+              </div>
+              <div style={{ fontSize: '13.5px', fontWeight: 700, marginTop: '6px' }}>Business Locks $50</div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>Funds stored in on-chain vault</div>
             </button>
 
             <button
               type="button"
               onClick={() => setSimulatorStep(2)}
               style={{
-                padding: '12px',
+                padding: '14px 16px',
                 borderRadius: 'var(--radius-md)',
-                background: simulatorStep >= 2 ? 'var(--surface-subtle)' : 'transparent',
+                background: simulatorStep >= 2 ? 'rgba(36, 44, 36, 0.7)' : 'rgba(20, 24, 20, 0.4)',
                 border: simulatorStep === 2 ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
                 color: 'var(--text-primary)',
                 textAlign: 'left',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                transition: 'all 0.2s ease',
+                boxShadow: simulatorStep === 2 ? '0 0 16px rgba(112, 183, 255, 0.15)' : 'none',
               }}
             >
-              <div style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 700 }}>STEP 2</div>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 800 }}>STEP 02</span>
+                <span className={`step-indicator-pill ${simulatorStep === 2 ? 'active' : simulatorStep > 2 ? 'completed' : 'inactive'}`}>
+                  2
+                </span>
+              </div>
+              <div style={{ fontSize: '13.5px', fontWeight: 700, marginTop: '6px' }}>
                 {simulatorScenario === 'success' ? 'Customer Pays' : 'Deadline Passes'}
+              </div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                {simulatorScenario === 'success' ? 'HMAC verified conversion' : 'Timelock elapsed'}
               </div>
             </button>
 
@@ -384,35 +445,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               type="button"
               onClick={() => setSimulatorStep(3)}
               style={{
-                padding: '12px',
+                padding: '14px 16px',
                 borderRadius: 'var(--radius-md)',
-                background: simulatorStep >= 3 ? 'var(--surface-subtle)' : 'transparent',
+                background: simulatorStep >= 3 ? 'rgba(36, 44, 36, 0.7)' : 'rgba(20, 24, 20, 0.4)',
                 border: simulatorStep === 3 ? (simulatorScenario === 'success' ? '1px solid var(--semantic-green)' : '1px solid var(--semantic-amber)') : '1px solid var(--border-subtle)',
                 color: 'var(--text-primary)',
                 textAlign: 'left',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                transition: 'all 0.2s ease',
+                boxShadow: simulatorStep === 3 ? '0 0 16px rgba(52, 211, 153, 0.15)' : 'none',
               }}
             >
-              <div style={{ fontSize: '11px', color: simulatorScenario === 'success' ? 'var(--semantic-green)' : 'var(--semantic-amber)', fontWeight: 700 }}>
-                STEP 3
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '11px', color: simulatorScenario === 'success' ? 'var(--semantic-green)' : 'var(--semantic-amber)', fontWeight: 800 }}>
+                  STEP 03
+                </span>
+                <span className={`step-indicator-pill ${simulatorStep === 3 ? 'active' : 'inactive'}`}>
+                  3
+                </span>
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
+              <div style={{ fontSize: '13.5px', fontWeight: 700, marginTop: '6px' }}>
                 {simulatorScenario === 'success' ? 'Referrer Gets Paid' : 'Business Reclaims $50'}
+              </div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                {simulatorScenario === 'success' ? 'Direct 3s wallet transfer' : 'Zero loss guaranteed'}
               </div>
             </button>
           </div>
 
-          {/* Visual Flow Animation Representation */}
+          {/* Visual Flow Representation */}
           <div
             style={{
-              padding: '24px',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--surface-input)',
+              padding: '28px',
+              borderRadius: 'var(--radius-lg)',
+              background: 'rgba(14, 18, 14, 0.7)',
               border: '1px solid var(--border-subtle)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '20px',
+              gap: '24px',
             }}
           >
             {/* Visual Box Diagram */}
@@ -421,110 +491,115 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 display: 'grid',
                 gridTemplateColumns: '1fr auto 1fr auto 1fr',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '16px',
                 textAlign: 'center',
               }}
             >
               {/* Business Box */}
               <div
                 style={{
-                  padding: '16px',
+                  padding: '20px 16px',
                   borderRadius: 'var(--radius-md)',
                   background: 'var(--surface-card)',
                   border: simulatorStep === 1 ? '1px solid var(--accent-lime)' : '1px solid var(--border-card)',
+                  boxShadow: simulatorStep === 1 ? '0 0 20px rgba(184, 243, 107, 0.2)' : 'none',
+                  transition: 'all 0.25s ease',
                 }}
               >
                 <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>
                   Business Account
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
-                  Acme SaaS
+                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px', fontFamily: 'var(--font-display)' }}>
+                  Acme Protocol
                 </div>
-                <div style={{ fontSize: '12px', color: simulatorStep === 1 ? 'var(--accent-lime)' : 'var(--text-secondary)', marginTop: '4px' }}>
-                  {simulatorStep === 1 ? 'Deposited $50 USDC' : simulatorScenario === 'refund' && simulatorStep === 3 ? 'Refunded $50 USDC' : 'Funds sent to vault'}
+                <div style={{ fontSize: '12px', color: simulatorStep === 1 ? 'var(--accent-lime)' : 'var(--text-secondary)', marginTop: '4px', fontWeight: 600 }}>
+                  {simulatorStep === 1 ? 'Deposited $50 USDC' : simulatorScenario === 'refund' && simulatorStep === 3 ? 'Refunded $50 USDC' : 'Funds in vault'}
                 </div>
               </div>
 
               {/* Arrow */}
-              <ArrowRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+              <ArrowRight size={20} style={{ color: 'var(--accent-lime)', opacity: 0.6 }} />
 
               {/* Vault Box */}
               <div
                 style={{
-                  padding: '16px',
+                  padding: '20px 16px',
                   borderRadius: 'var(--radius-md)',
                   background: 'var(--surface-card)',
                   border: simulatorStep === 2 ? '1px solid var(--accent-blue)' : '1px solid var(--border-card)',
-                  boxShadow: simulatorStep === 2 ? '0 0 15px rgba(112, 183, 255, 0.2)' : 'none',
+                  boxShadow: simulatorStep === 2 ? '0 0 25px rgba(112, 183, 255, 0.25)' : 'none',
+                  transition: 'all 0.25s ease',
                 }}
               >
                 <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>
-                  Secure Escrow Vault
+                  Smart Escrow Vault
                 </div>
-                <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--accent-lime)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
-                  {simulatorStep === 3 ? (simulatorScenario === 'success' ? '$0.00 (Paid Out)' : '$0.00 (Refunded)') : '$50.00 USDC'}
+                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--accent-lime)', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                  {simulatorStep === 3 ? (simulatorScenario === 'success' ? '$0.00 (Disbursed)' : '$0.00 (Reclaimed)') : '$50.00 USDC'}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                   {simulatorStep === 1 && '🔒 Locked for Referrer'}
-                  {simulatorStep === 2 && (simulatorScenario === 'success' ? '⚡ Customer Payment Confirmed' : '⏰ 7-Day Deadline Elapsed')}
-                  {simulatorStep === 3 && '✓ Vault Empty (Closed)'}
+                  {simulatorStep === 2 && (simulatorScenario === 'success' ? '⚡ Payment Confirmed' : '⏰ Deadline Elapsed')}
+                  {simulatorStep === 3 && '✓ Vault Settled'}
                 </div>
               </div>
 
               {/* Arrow */}
-              <ArrowRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+              <ArrowRight size={20} style={{ color: 'var(--accent-blue)', opacity: 0.6 }} />
 
               {/* Referrer Box */}
               <div
                 style={{
-                  padding: '16px',
+                  padding: '20px 16px',
                   borderRadius: 'var(--radius-md)',
                   background: 'var(--surface-card)',
                   border: simulatorStep === 3 && simulatorScenario === 'success' ? '1px solid var(--semantic-green)' : '1px solid var(--border-card)',
+                  boxShadow: simulatorStep === 3 && simulatorScenario === 'success' ? '0 0 25px rgba(52, 211, 153, 0.25)' : 'none',
+                  transition: 'all 0.25s ease',
                 }}
               >
                 <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 700 }}>
                   Referrer Wallet
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px', fontFamily: 'var(--font-display)' }}>
                   Sarah (Partner)
                 </div>
-                <div style={{ fontSize: '12px', color: simulatorStep === 3 && simulatorScenario === 'success' ? 'var(--semantic-green)' : 'var(--text-secondary)', marginTop: '4px', fontWeight: simulatorStep === 3 ? 700 : 400 }}>
+                <div style={{ fontSize: '12px', color: simulatorStep === 3 && simulatorScenario === 'success' ? 'var(--semantic-green)' : 'var(--text-secondary)', marginTop: '4px', fontWeight: simulatorStep === 3 ? 700 : 500 }}>
                   {simulatorStep === 3 && simulatorScenario === 'success'
-                    ? '+$50.00 USDC Arrived! 🎉'
+                    ? '+$50.00 USDC Received! 🎉'
                     : simulatorScenario === 'refund' && simulatorStep === 3
-                    ? 'No payout (Deal timed out)'
-                    : 'Awaiting completion'}
+                      ? 'No payout (Timed out)'
+                      : 'Awaiting verified deal'}
                 </div>
               </div>
             </div>
 
-            {/* Explanation banner for the active simulator step */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: '13.5px', color: 'var(--text-secondary)' }}>
+            {/* Explanation banner for active simulator step */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)', flexWrap: 'wrap', gap: '14px' }}>
+              <div style={{ fontSize: '13.5px', color: 'var(--text-secondary)', flex: 1, minWidth: '260px' }}>
                 {simulatorStep === 1 && (
                   <span>
-                    👉 <strong>What just happened:</strong> Acme SaaS creates the referral program and deposits $50 USDC into an escrow account. Sarah gets a link showing the money is waiting for her.
+                    👉 <strong>What just happened:</strong> Acme Protocol registers their product and deposits $50 USDC into a timelocked escrow contract. Sarah receives her tracked referral link showing the funds are physically locked.
                   </span>
                 )}
                 {simulatorStep === 2 && simulatorScenario === 'success' && (
                   <span>
-                    👉 <strong>What just happened:</strong> A customer buys through Sarah’s link. The system detects the purchase and marks the deal completed.
+                    👉 <strong>What just happened:</strong> A customer purchases via Sarah’s link. Acme’s server sends an HMAC-SHA256 authenticated event to Rewalf, cryptographically validating the deal.
                   </span>
                 )}
                 {simulatorStep === 2 && simulatorScenario === 'refund' && (
                   <span>
-                    👉 <strong>What just happened:</strong> 7 days passed without any customer purchase. The deadline timelock has officially expired.
+                    👉 <strong>What just happened:</strong> The 14-day campaign deadline passed without qualifying sales. The timelock condition unlocks refund eligibility.
                   </span>
                 )}
                 {simulatorStep === 3 && simulatorScenario === 'success' && (
                   <span>
-                    👉 <strong>What just happened:</strong> Sarah clicks "Claim" and receives the $50 USDC directly in her wallet in 3 seconds. Zero waiting. Zero chasing invoices.
+                    👉 <strong>What just happened:</strong> Sarah claims her bounty and receives $50 USDC in 3.2 seconds directly from the contract. Zero manual invoicing. Zero delayed payouts.
                   </span>
                 )}
                 {simulatorStep === 3 && simulatorScenario === 'refund' && (
                   <span>
-                    👉 <strong>What just happened:</strong> Acme SaaS clicks "Reclaim" and receives 100% of their $50 USDC back. Zero money wasted.
+                    👉 <strong>What just happened:</strong> Acme clicks "Reclaim" and recovers 100% of the $50 USDC immediately back to their Stellar wallet.
                   </span>
                 )}
               </div>
@@ -535,7 +610,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   type="button"
                   className="btn btn-primary btn-sm"
                   onClick={() => setSimulatorStep((simulatorStep + 1) as 2 | 3)}
-                  style={{ gap: '6px', whiteSpace: 'nowrap', marginLeft: '16px' }}
+                  style={{ gap: '6px', whiteSpace: 'nowrap' }}
                 >
                   Next Step <ArrowRight size={14} />
                 </button>
@@ -544,11 +619,106 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   type="button"
                   className="btn btn-outline btn-sm"
                   onClick={() => setSimulatorStep(1)}
-                  style={{ gap: '6px', whiteSpace: 'nowrap', marginLeft: '16px' }}
+                  style={{ gap: '6px', whiteSpace: 'nowrap' }}
                 >
                   <RotateCcw size={13} /> Reset Demo
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3.5 Protocol Architecture Flow: 3-Step High-End Architecture */}
+      <section
+        style={{
+          maxWidth: '1100px',
+          margin: '0 auto 90px',
+          padding: '0 24px',
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '44px' }}>
+          <div
+            style={{
+              fontSize: '11px',
+              textTransform: 'uppercase',
+              color: 'var(--accent-lime)',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              marginBottom: '6px',
+            }}
+          >
+            END-TO-END WORKFLOW
+          </div>
+          <h2 style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.025em', fontFamily: 'var(--font-display)' }}>
+            How Rewalf Eliminates Trust Issues
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '15.5px', maxWidth: '640px', margin: '8px auto 0' }}>
+            Built from first principles: money is held by mathematical smart contracts, never by middlemen or delayed accounting spreadsheets.
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
+            gap: '24px',
+          }}
+        >
+          {/* Card 1 */}
+          <div className="feature-grid-item">
+            <div className="feature-icon-wrap">
+              <Building2 size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--accent-lime)', fontWeight: 800, letterSpacing: '0.04em' }}>01 / PROTOCOL SETUP</div>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+                Register Website & Deposit Escrow
+              </h3>
+            </div>
+            <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Businesses register their website URL, define reward rates (e.g. $50 USDC per conversion), and fund the campaign escrow directly with a timelock deadline.
+            </p>
+            <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--accent-lime)' }}>
+              <Lock size={13} /> Timelocked & Reclaimable
+            </div>
+          </div>
+
+          {/* Card 2 */}
+          <div className="feature-grid-item">
+            <div className="feature-icon-wrap" style={{ background: 'linear-gradient(135deg, rgba(112, 183, 255, 0.15) 0%, rgba(184, 243, 107, 0.08) 100%)', borderColor: 'rgba(112, 183, 255, 0.3)', color: 'var(--accent-blue)', boxShadow: '0 0 16px rgba(112, 183, 255, 0.15)' }}>
+              <Users size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 800, letterSpacing: '0.04em' }}>02 / PROMOTER DISTRIBUTION</div>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+                Self-Serve Tracked Referral Links
+              </h3>
+            </div>
+            <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              Affiliates and promoters generate custom referral links with their wallet address attached. Clicking immediately routes buyers to the business site with referral attribution.
+            </p>
+            <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--accent-blue)' }}>
+              <Zap size={13} /> Instant Link Creation
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="feature-grid-item">
+            <div className="feature-icon-wrap" style={{ background: 'linear-gradient(135deg, rgba(52, 211, 153, 0.15) 0%, rgba(112, 183, 255, 0.08) 100%)', borderColor: 'rgba(52, 211, 153, 0.3)', color: 'var(--semantic-green)', boxShadow: '0 0 16px rgba(52, 211, 153, 0.15)' }}>
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--semantic-green)', fontWeight: 800, letterSpacing: '0.04em' }}>03 / CRYPTOGRAPHIC SETTLEMENT</div>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
+                HMAC-SHA256 Verification & Payout
+              </h3>
+            </div>
+            <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              When a verified customer checks out, the business webhook triggers non-custodial smart escrow release. Payouts land in the promoter’s wallet with zero middleman interference.
+            </p>
+            <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--semantic-green)' }}>
+              <ShieldCheck size={13} /> Replay-Protected Audit Log
             </div>
           </div>
         </div>
