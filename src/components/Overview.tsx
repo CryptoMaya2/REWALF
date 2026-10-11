@@ -15,7 +15,7 @@ interface OverviewProps {
   protocols: Protocol[];
   agreements: Agreement[];
   connectedWallet: ConnectedWallet | null;
-  onOpenRegisterProtocol: () => void;
+  onOpenRegisterProtocol?: () => void;
   onSelectProtocol: (protocol: Protocol) => void;
   onOpenCreateCampaign: () => void;
   onOpenWalletModal: () => void;
@@ -28,7 +28,7 @@ export const Overview: React.FC<OverviewProps> = ({
   protocols,
   agreements,
   connectedWallet,
-  onOpenRegisterProtocol,
+  onOpenRegisterProtocol: _onOpenRegisterProtocol,
   onSelectProtocol,
   onOpenCreateCampaign,
   onOpenWalletModal: _onOpenWalletModal,
@@ -129,20 +129,11 @@ export const Overview: React.FC<OverviewProps> = ({
 
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
-              id="dashboard-register-protocol-btn"
-              type="button"
-              className="btn btn-primary"
-              onClick={onOpenRegisterProtocol}
-              style={{ fontWeight: 700, padding: '10px 18px', boxShadow: '0 0 20px rgba(184, 243, 107, 0.25)' }}
-            >
-              <Building2 size={16} /> Register Protocol
-            </button>
-            <button
               id="dashboard-create-campaign-btn"
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-primary"
               onClick={onOpenCreateCampaign}
-              style={{ fontWeight: 600, padding: '10px 18px' }}
+              style={{ fontWeight: 700, padding: '10px 18px', boxShadow: '0 0 20px rgba(184, 243, 107, 0.25)' }}
             >
               <Plus size={16} /> Create Campaign
             </button>
@@ -284,13 +275,6 @@ export const Overview: React.FC<OverviewProps> = ({
             >
               View All ({protocols.length})
             </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={onOpenRegisterProtocol}
-            >
-              <Plus size={13} /> Add Protocol
-            </button>
           </div>
         </div>
 
@@ -298,15 +282,7 @@ export const Overview: React.FC<OverviewProps> = ({
           <div className="empty-state" style={{ padding: '36px 20px' }}>
             <Building2 size={24} style={{ color: 'var(--text-tertiary)', marginBottom: '8px' }} />
             <h4>No Protocols Registered Yet</h4>
-            <p>Register your website or web3 product to begin configuring referral attribution.</p>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={onOpenRegisterProtocol}
-              style={{ marginTop: '8px' }}
-            >
-              <Plus size={13} /> Register Your Protocol
-            </button>
+            <p>Use "Register business" in the top bar to begin configuring referral attribution.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: '14px' }}>

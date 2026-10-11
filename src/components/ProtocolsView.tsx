@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import type { Protocol, Agreement } from '../stellar/types';
 import {
   Building2,
-  Plus,
   ExternalLink,
   Search,
   CheckCircle2,
@@ -14,7 +13,7 @@ import {
 interface ProtocolsViewProps {
   protocols: Protocol[];
   agreements: Agreement[];
-  onOpenRegisterModal: () => void;
+  onOpenRegisterModal?: () => void;
   onSelectProtocol: (protocol: Protocol) => void;
   onOpenCreateCampaign: (protocol: Protocol) => void;
 }
@@ -22,7 +21,7 @@ interface ProtocolsViewProps {
 export const ProtocolsView: React.FC<ProtocolsViewProps> = ({
   protocols,
   agreements,
-  onOpenRegisterModal,
+  onOpenRegisterModal: _onOpenRegisterModal,
   onSelectProtocol,
   onOpenCreateCampaign,
 }) => {
@@ -51,16 +50,6 @@ export const ProtocolsView: React.FC<ProtocolsViewProps> = ({
             Configure referral integrations, manage token bounties, and track on-chain partner attribution
           </p>
         </div>
-
-        <button
-          id="add-protocol-btn"
-          type="button"
-          className="btn btn-primary"
-          onClick={onOpenRegisterModal}
-          style={{ fontWeight: 700, padding: '10px 20px', boxShadow: '0 0 20px rgba(184, 243, 107, 0.2)' }}
-        >
-          <Plus size={16} /> Register Protocol
-        </button>
       </div>
 
       {/* Filter and Search Bar */}
@@ -107,16 +96,8 @@ export const ProtocolsView: React.FC<ProtocolsViewProps> = ({
             <p>
               {search
                 ? `No registered protocols matched "${search}".`
-                : 'Register your website or web3 product to generate smart contract referral programs.'}
+                : 'Use "Register business" in the top bar to add your website or web3 product.'}
             </p>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={onOpenRegisterModal}
-              style={{ marginTop: '8px' }}
-            >
-              <Plus size={14} /> Register Your First Protocol
-            </button>
           </div>
         </div>
       ) : (

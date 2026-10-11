@@ -288,7 +288,6 @@ export const App: React.FC = () => {
         connectedWallet={connectedWallet}
         onOpenWalletModal={() => setWalletModalOpen(true)}
         onOpenHowItWorks={() => setHowItWorksOpen(true)}
-        onOpenBusinessModal={() => setBusinessModalOpen(true)}
         onOpenRegisterModal={() => setRegisterModalOpen(true)}
       />
 

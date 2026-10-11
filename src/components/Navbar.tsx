@@ -36,8 +36,7 @@ interface NavbarProps {
   connectedWallet: ConnectedWallet | null;
   onOpenWalletModal: () => void;
   onOpenHowItWorks: () => void;
-  onOpenBusinessModal: () => void;
-  onOpenRegisterModal?: () => void;
+  onOpenRegisterModal: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -46,7 +45,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   connectedWallet,
   onOpenWalletModal,
   onOpenHowItWorks,
-  onOpenBusinessModal,
   onOpenRegisterModal,
 }) => {
   const handleNavClick = (tab: NavigationTab) => {
@@ -177,29 +175,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               Stellar Testnet
             </div>
 
-            {onOpenRegisterModal && (
-              <button
-                id="nav-register-protocol-btn"
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={onOpenRegisterModal}
-                style={{ fontWeight: 700 }}
-                title="Register your website or web3 product"
-              >
-                <Plus size={13} />
-                Add Protocol
-              </button>
-            )}
-
             <button
-              id="business-profile-btn"
+              id="nav-register-business-btn"
               type="button"
-              className="btn btn-outline btn-sm"
-              onClick={onOpenBusinessModal}
-              title="Register and brand your business profile"
+              className="btn btn-primary btn-sm"
+              onClick={onOpenRegisterModal}
+              style={{ fontWeight: 700 }}
+              title="Register your business on Rewalf"
             >
-              <Building2 size={14} />
-              Business
+              <Plus size={13} />
+              Register business
             </button>
 
             <button
