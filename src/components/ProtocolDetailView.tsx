@@ -763,9 +763,9 @@ export const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
   -H "X-Rewalf-Signature: HMAC_SHA256_HEX(payload, "${currentProtocol.webhookSecret}")" \\
   -d '{
     "apiKey": "${currentProtocol.apiKey}",
-    "referralCode": "saas91x",
+    "referralCode": "xlm77a",
     "event": "customer_deal_completed",
-    "txHash": "7b4c6e80b435f524da478546123490b4e05466c1b3f9bb8693c0429f5f0b548d"
+    "txHash": "3a1f9e80c425b524fa478546983490b4e05466c1b3f9bb8693c0429f5f0b1234"
   }'`}
             </pre>
           </div>

@@ -1,16 +1,16 @@
 import type { BusinessProfile } from '../stellar/types';
 
-const STORAGE_KEY_BUSINESS_PROFILE = 'rewalf_business_profile_v1';
+const STORAGE_KEY_BUSINESS_PROFILE = 'rewalf_business_profile_v2';
 
 export const DEFAULT_DEMO_BUSINESS: BusinessProfile = {
-  id: 'biz_saasify',
-  name: 'SaaSify Cloud Infrastructure',
-  website: 'https://saasify.cloud',
-  category: 'B2B SaaS / Cloud',
-  description: 'Enterprise developer APIs and distributed cloud compute on Stellar.',
-  contactEmail: 'partners@saasify.cloud',
-  walletAddress: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
-  createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7, // 7 days ago
+  id: 'biz_stellar_cloud',
+  name: 'Stellar Cloud Infrastructure',
+  website: 'https://stellar.org',
+  category: 'Web3 Infrastructure',
+  description: 'Decentralized financial infrastructure, node validation, and payment anchors on Stellar testnet.',
+  contactEmail: 'partners@stellar.org',
+  walletAddress: 'GBTFHP6SP4GCKMC4MSZ23667UV55CTG6C6N4EKVDLMS4FIH6L7QLJHFT',
+  createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7,
   verified: true,
 };
 
@@ -21,11 +21,14 @@ export function loadBusinessProfile(): BusinessProfile {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_BUSINESS_PROFILE);
     if (!raw) {
-      // Initialize with default demo business profile
       localStorage.setItem(STORAGE_KEY_BUSINESS_PROFILE, JSON.stringify(DEFAULT_DEMO_BUSINESS));
       return { ...DEFAULT_DEMO_BUSINESS };
     }
     const parsed = JSON.parse(raw);
+    if (parsed.id === 'biz_saasify') {
+      localStorage.setItem(STORAGE_KEY_BUSINESS_PROFILE, JSON.stringify(DEFAULT_DEMO_BUSINESS));
+      return { ...DEFAULT_DEMO_BUSINESS };
+    }
     return parsed;
   } catch (err) {
     console.error('Failed to load business profile', err);

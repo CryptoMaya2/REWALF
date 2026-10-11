@@ -1,4 +1,4 @@
-import { runWorkflowVerificationTests } from './workflowVerification.test';
+import { runWorkflowVerificationTests } from './workflowVerification.test.ts';
 
 declare const process: { exit: (code?: number) => void };
 

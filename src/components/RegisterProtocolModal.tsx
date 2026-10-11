@@ -407,7 +407,7 @@ export const RegisterProtocolModal: React.FC<RegisterProtocolModalProps> = ({
                       </span>
                     </div>
                     <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                      Server-to-server HMAC signed webhook. Your backend triggers Rewalf when a smart contract deposit or Stripe purchase completes.
+                      Server-to-server event notification. Your backend marks the referral deal paid so the promoter can claim their escrow reward.
                     </p>
                   </div>
                 </div>

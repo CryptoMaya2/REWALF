@@ -561,10 +561,10 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-blue)', fontWeight: 700, fontSize: '13.5px', marginBottom: '6px' }}>
             <Zap size={15} />
-            Test & Verify Customer Action (Order / Purchase Verification)
+            Demo Button: Mark Customer Paid
           </div>
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
-            In production, verified customer orders are triggered via webhook or client SDK. Use this simulator to test anti-fraud validation, escrow deduction, and reward unlock.
+            Simulate the customer checkout. Clicking below marks the deal paid so you can click Claim to receive your escrow reward.
           </p>
 
           <form onSubmit={handleAuthenticateConversion} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', alignItems: 'flex-end' }}>
@@ -605,7 +605,7 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
               style={{ padding: '8px 14px', fontSize: '12.5px' }}
             >
               <ShieldCheck size={14} />
-              Verify & Unlock Reward
+              Mark Customer Paid
             </button>
           </form>
 

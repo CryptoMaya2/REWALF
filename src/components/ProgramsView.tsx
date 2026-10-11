@@ -674,10 +674,10 @@ export const ProgramsView: React.FC<ProgramsViewProps> = ({
                                 setTestReferrerAddr(a.referrerAddress);
                                 setConversionFeedback(null);
                               }}
-                              title="Test Authenticated Conversion Verification"
+                              title="Mark Customer Paid (Demo Simulator)"
                             >
                               <ShieldCheck size={11} color="var(--accent-lime)" />
-                              Verify Sale
+                              Mark Paid (Demo)
                             </button>
 
                             <button
@@ -1182,14 +1182,14 @@ export const ProgramsView: React.FC<ProgramsViewProps> = ({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Verification Adapter</label>
+                  <label className="form-label">Payment Confirmation Adapter</label>
                   <select
                     value={testVerificationMethod}
                     onChange={(e) => setTestVerificationMethod(e.target.value as any)}
                     className="form-select font-mono"
                   >
-                    <option value="hmac_webhook">HMAC Webhook Oracle (Server Signature)</option>
-                    <option value="sdk_client">Rewalf Client SDK (Checkout Token)</option>
+                    <option value="sdk_client">Demo Event Simulator (Mark Customer Paid)</option>
+                    <option value="hmac_webhook">Backend Webhook Oracle</option>
                   </select>
                 </div>
 
@@ -1216,7 +1216,7 @@ export const ProgramsView: React.FC<ProgramsViewProps> = ({
                   Close
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  <ShieldCheck size={14} /> Authenticate & Record Conversion
+                  <ShieldCheck size={14} /> Mark Customer Paid & Unlock Escrow
                 </button>
               </div>
             </form>
@@ -1297,7 +1297,7 @@ export const ProgramsView: React.FC<ProgramsViewProps> = ({
                     <div>
                       <strong>Your Unique Referral Link is Active!</strong>
                       <p style={{ marginTop: '2px', fontSize: '12px' }}>
-                        Share this link with potential customers. When they visit and purchase, rewards debit automatically from escrow.
+                        Share this link with potential customers. When the customer payment is confirmed, the referrer clicks Claim to receive the escrow reward.
                       </p>
                     </div>
                   </div>

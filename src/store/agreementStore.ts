@@ -7,9 +7,9 @@ import type {
 } from '../stellar/types';
 import { generateTestnetKeypair, getAccountBalances } from '../stellar/stellarService';
 
-const STORAGE_KEY_AGREEMENTS = 'rewalf_agreements_v2'; // bumped: removed fake Stellar tx hashes
-const STORAGE_KEY_BUSINESS_WALLET = 'rewalf_business_wallet_v1';
-const STORAGE_KEY_REFERRER_WALLET = 'rewalf_referrer_wallet_v1';
+const STORAGE_KEY_AGREEMENTS = 'rewalf_agreements_v3'; // bumped: active real testnet offers only
+const STORAGE_KEY_BUSINESS_WALLET = 'rewalf_business_wallet_v2';
+const STORAGE_KEY_REFERRER_WALLET = 'rewalf_referrer_wallet_v2';
 
 /**
  * Generate a clean unique referral code
@@ -23,182 +23,40 @@ export function generateReferralCode(): string {
   return code;
 }
 
-export const DEFAULT_DEMO_AGREEMENTS: Agreement[] = [
-  {
-    code: 'saas91x',
-    protocolId: 'proto_saasify',
-    businessAddress: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
-    businessId: 'biz_saasify',
-    businessName: 'SaaSify Cloud Infrastructure',
-    businessWebsite: 'https://saasify.cloud',
-    targetUrl: 'https://saasify.cloud/pricing',
-    businessCategory: 'B2B SaaS / Cloud',
-    referrerAddress: 'GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP',
-    customerLabel: 'Enterprise Annual Tier #1092',
-    amount: '50.00',
-    rewardPerConversion: '50.00',
-    totalBudget: '500.00',
-    remainingBudget: '350.00',
-    claimedAmount: '150.00',
-    clicksCount: 142,
-    conversionsCount: 3,
-    assetCode: 'USDC',
-    deadline: Date.now() + 1000 * 60 * 60 * 18, // 18 hours remaining
-    state: 'PAID',
-    escrowPublicKey: 'GDEMO_ESCROW_SAAS91X_TESTNET_PLACEHOLDER_NOT_REAL',
-    escrowSecretKey: 'SDEMO_TESTNET_ONLY_NEVER_MAINNET',
-    lockTxHash: 'DEMO_NO_REAL_TX_saas91x_lock',
-    paidTxHash: 'DEMO_NO_REAL_TX_saas91x_paid',
-    createdAt: Date.now() - 1000 * 60 * 60 * 6,
-    paidAt: Date.now() - 1000 * 60 * 45,
-    conversions: [
-      {
-        id: 'conv_s91x_01',
-        campaignCode: 'saas91x',
-        orderId: 'ORD-1092-ENT',
-        customerLabel: 'Enterprise Annual Tier #1092',
-        referrerAddress: 'GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP',
-        rewardAmount: '50.00',
-        assetCode: 'USDC',
-        verifiedAt: Date.now() - 1000 * 60 * 45,
-        verificationMethod: 'hmac_webhook',
-        proofHash: 'whsec_7b4c6e80b435f524da478546123490b4',
-        status: 'paid',
-        notes: 'Signed HMAC payload verified via Stripe webhook adapter',
-      },
-      {
-        id: 'conv_s91x_02',
-        campaignCode: 'saas91x',
-        orderId: 'ORD-1088-ENT',
-        customerLabel: 'Enterprise Starter Seat #1088',
-        referrerAddress: 'GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP',
-        rewardAmount: '50.00',
-        assetCode: 'USDC',
-        verifiedAt: Date.now() - 1000 * 60 * 120,
-        verificationMethod: 'sdk_client',
-        proofHash: 'sdk_sig_8a39df741cb209e51147a6c93b',
-        status: 'paid',
-        notes: 'Client SDK conversion event with verified checkout token',
-      },
-      {
-        id: 'conv_s91x_03',
-        campaignCode: 'saas91x',
-        orderId: 'ORD-1074-PRO',
-        customerLabel: 'Pro Team Seat #1074',
-        referrerAddress: 'GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP',
-        rewardAmount: '50.00',
-        assetCode: 'USDC',
-        verifiedAt: Date.now() - 1000 * 60 * 240,
-        verificationMethod: 'hmac_webhook',
-        proofHash: 'whsec_3f820cbb710d8a562093e4a91b',
-        status: 'paid',
-        notes: 'Verified subscription renewal payment',
-      },
-    ],
-  },
-  {
-    code: 'defi44k',
-    protocolId: 'proto_phoenix_dex',
-    businessAddress: 'GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP',
-    businessId: 'proto_phoenix_dex',
-    businessName: 'Phoenix Stellar DEX',
-    businessWebsite: 'https://phoenixdex.fi',
-    targetUrl: 'https://phoenixdex.fi/swap',
-    businessCategory: 'DeFi / DEX',
-    referrerAddress: 'GCNL55IJTH2HX26HLNIGYD7JJDNXVNMKFVTK4KCSO3RDOT5FHKZ6RJI',
-    customerLabel: 'Liquidity Provider Onboarding Tier 1',
-    amount: '70.00',
-    rewardPerConversion: '70.00',
-    totalBudget: '350.00',
-    remainingBudget: '350.00',
-    claimedAmount: '0.00',
-    clicksCount: 89,
-    conversionsCount: 0,
-    assetCode: 'XLM',
-    deadline: Date.now() + 1000 * 60 * 60 * 4, // 4 hours remaining
-    state: 'LOCKED',
-    escrowPublicKey: 'GDEMO_ESCROW_DEFI44K_TESTNET_PLACEHOLDER_NOT_REAL',
-    escrowSecretKey: 'SDEMO_TESTNET_ONLY_NEVER_MAINNET',
-    lockTxHash: 'DEMO_NO_REAL_TX_defi44k_lock',
-    createdAt: Date.now() - 1000 * 60 * 90,
-    conversions: [],
-  },
-  {
-    code: 'node88q',
-    protocolId: 'proto_saasify',
-    businessAddress: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
-    businessId: 'biz_saasify',
-    businessName: 'SaaSify Cloud Infrastructure',
-    businessWebsite: 'https://saasify.cloud',
-    targetUrl: 'https://saasify.cloud/nodes',
-    businessCategory: 'B2B SaaS / Cloud',
-    referrerAddress: 'GBVKI23OQZCANDBER6X7QNBIK755YILSX47MXWI3O7QKJL4SMSOVWXI',
-    customerLabel: 'Stellar Validator Cluster Sponsor',
-    amount: '75.00',
-    rewardPerConversion: '75.00',
-    totalBudget: '75.00',
-    remainingBudget: '0.00',
-    claimedAmount: '75.00',
-    clicksCount: 64,
-    conversionsCount: 1,
-    assetCode: 'USDC',
-    deadline: Date.now() - 1000 * 60 * 60 * 12,
-    state: 'CLAIMED',
-    escrowPublicKey: 'GDEMO_ESCROW_NODE88Q_TESTNET_PLACEHOLDER_NOT_REAL',
-    escrowSecretKey: 'SDEMO_TESTNET_ONLY_NEVER_MAINNET',
-    lockTxHash: 'DEMO_NO_REAL_TX_node88q_lock',
-    paidTxHash: 'DEMO_NO_REAL_TX_node88q_paid',
-    claimTxHash: 'DEMO_NO_REAL_TX_node88q_claim',
-    createdAt: Date.now() - 1000 * 60 * 60 * 24,
-    paidAt: Date.now() - 1000 * 60 * 60 * 18,
-    claimedAt: Date.now() - 1000 * 60 * 60 * 14,
-    conversions: [
-      {
-        id: 'conv_n88q_01',
-        campaignCode: 'node88q',
-        orderId: 'VAL-SPONSOR-401',
-        customerLabel: 'Stellar Validator Cluster Sponsor',
-        referrerAddress: 'GBVKI23OQZCANDBER6X7QNBIK755YILSX47MXWI3O7QKJL4SMSOVWXI',
-        rewardAmount: '75.00',
-        assetCode: 'USDC',
-        verifiedAt: Date.now() - 1000 * 60 * 60 * 18,
-        verificationMethod: 'sdk_client',
-        proofHash: 'sdk_sig_2a4b6c8d0e2f4a6c8e0b2d4f6a',
-        status: 'paid',
-        notes: 'Validator staking contract initialized',
-      },
-    ],
-  },
-  {
-    code: 'api22z',
-    protocolId: 'proto_saasify',
-    businessAddress: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
-    businessId: 'biz_saasify',
-    businessName: 'SaaSify Cloud Infrastructure',
-    businessWebsite: 'https://saasify.cloud',
-    targetUrl: 'https://saasify.cloud/api-docs',
-    businessCategory: 'B2B SaaS / Cloud',
-    referrerAddress: 'GCVJ4Z6YI75QSOP3XDTD66FKWMNCB2CJFNV3GYVNHWLMTW5MKFHKD6',
-    customerLabel: 'Fintech API High-Throughput Bundle',
-    amount: '50.00',
-    rewardPerConversion: '50.00',
-    totalBudget: '50.00',
-    remainingBudget: '50.00',
-    claimedAmount: '0.00',
-    clicksCount: 38,
-    conversionsCount: 0,
-    assetCode: 'USDC',
-    deadline: Date.now() - 1000 * 60 * 60 * 5,
-    state: 'RECLAIMED',
-    escrowPublicKey: 'GDEMO_ESCROW_API22Z_TESTNET_PLACEHOLDER_NOT_REAL',
-    escrowSecretKey: 'SDEMO_TESTNET_ONLY_NEVER_MAINNET',
-    lockTxHash: 'DEMO_NO_REAL_TX_api22z_lock',
-    reclaimTxHash: 'DEMO_NO_REAL_TX_api22z_reclaim',
-    createdAt: Date.now() - 1000 * 60 * 60 * 30,
-    reclaimedAt: Date.now() - 1000 * 60 * 60 * 4,
-    conversions: [],
-  },
-];
+/**
+ * Real Stellar Testnet Campaign Offer
+ * Confirmed on Stellar testnet ledger 5143879
+ * Lock Tx: f03e38d1e0bc33a5c1114916ee79d575efbddbb5e7de19290eae777bb1ab1a81
+ */
+export const REAL_TESTNET_AGREEMENT: Agreement = {
+  code: 'xlm77a',
+  protocolId: 'proto_stellar_cloud',
+  businessAddress: 'GBTFHP6SP4GCKMC4MSZ23667UV55CTG6C6N4EKVDLMS4FIH6L7QLJHFT',
+  businessId: 'biz_stellar_cloud',
+  businessName: 'Stellar Cloud Infrastructure',
+  businessWebsite: 'https://stellar.org',
+  targetUrl: 'https://stellar.org/learn',
+  businessCategory: 'Web3 Infrastructure',
+  referrerAddress: 'GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP',
+  customerLabel: 'Stellar Node Validator Tier 1',
+  amount: '7.00',
+  rewardPerConversion: '7.00',
+  totalBudget: '7.00',
+  remainingBudget: '7.00',
+  claimedAmount: '0.00',
+  clicksCount: 0,
+  conversionsCount: 0,
+  assetCode: 'XLM',
+  deadline: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days remaining
+  state: 'LOCKED',
+  escrowPublicKey: 'GBDIQO6OMKOTQWVK6TVJ33DPIZ5EXD3R5POZURPI4JUV6577A246LFI5',
+  escrowSecretKey: 'SCUFFNC4VGVHTYNB766EH2VFEUNEJ4UR6SKNI2DL3V3O7QYBO2AMUPU6',
+  lockTxHash: 'f03e38d1e0bc33a5c1114916ee79d575efbddbb5e7de19290eae777bb1ab1a81',
+  createdAt: 1770747800000,
+  conversions: [],
+};
+
+export const DEFAULT_DEMO_AGREEMENTS: Agreement[] = [REAL_TESTNET_AGREEMENT];
 
 /**
  * Load all stored agreements
@@ -207,14 +65,28 @@ export function loadAgreements(): Agreement[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_AGREEMENTS);
     if (!raw) {
-      // Seed default demo fixtures initially
       localStorage.setItem(STORAGE_KEY_AGREEMENTS, JSON.stringify(DEFAULT_DEMO_AGREEMENTS));
-      return DEFAULT_DEMO_AGREEMENTS;
+      return [...DEFAULT_DEMO_AGREEMENTS];
     }
-    return JSON.parse(raw);
+    const list: Agreement[] = JSON.parse(raw);
+    // Filter out fake sample campaigns with placeholders or DEMO prefixes
+    const nonSample = list.filter(
+      (a) =>
+        !a.lockTxHash?.startsWith('DEMO_') &&
+        !a.escrowPublicKey?.startsWith('GDEMO_') &&
+        a.code !== 'saas91x' &&
+        a.code !== 'defi44k' &&
+        a.code !== 'node88q' &&
+        a.code !== 'api22z'
+    );
+    if (nonSample.length === 0) {
+      localStorage.setItem(STORAGE_KEY_AGREEMENTS, JSON.stringify(DEFAULT_DEMO_AGREEMENTS));
+      return [...DEFAULT_DEMO_AGREEMENTS];
+    }
+    return nonSample;
   } catch (err) {
     console.error('Failed to load agreements from localStorage', err);
-    return [];
+    return [...DEFAULT_DEMO_AGREEMENTS];
   }
 }
 
@@ -547,7 +419,7 @@ export function getReferrersPerformanceList(agreements?: Agreement[]): ReferrerP
 
   for (const a of all) {
     const key = `${a.referrerAddress}_${a.code}`;
-    const clicks = a.clicksCount || (a.conversionsCount ? a.conversionsCount * 8 : 12);
+    const clicks = a.clicksCount || 0;
     const conversions = a.conversionsCount || (a.conversions?.length || 0);
     const rate = clicks > 0 ? (conversions / clicks) * 100 : 0;
     const earned = a.claimedAmount || (a.state === 'CLAIMED' ? a.amount : '0.00');

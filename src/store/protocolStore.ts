@@ -1,36 +1,21 @@
 import type { Protocol } from '../stellar/types';
 
-const STORAGE_KEY_PROTOCOLS = 'rewalf_protocols_v1';
+const STORAGE_KEY_PROTOCOLS = 'rewalf_protocols_v2';
 
 export const DEFAULT_DEMO_PROTOCOLS: Protocol[] = [
   {
-    id: 'proto_saasify',
-    name: 'SaaSify Cloud Infrastructure',
-    website: 'https://saasify.cloud',
-    description: 'Enterprise developer APIs, edge nodes, and cloud infrastructure on Stellar.',
+    id: 'proto_stellar_cloud',
+    name: 'Stellar Cloud Infrastructure',
+    website: 'https://stellar.org',
+    description: 'Decentralized financial infrastructure, node validation, and payment anchors on Stellar testnet.',
     network: 'Stellar Testnet',
-    ownerWallet: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
+    ownerWallet: 'GBTFHP6SP4GCKMC4MSZ23667UV55CTG6C6N4EKVDLMS4FIH6L7QLJHFT',
     status: 'active',
     integrationType: 'client_sdk',
     apiKey: 'rwlf_live_9f82b7c4e1a04d238b71569a',
-    webhookSecret: 'whsec_a8b9c0d1e2f3456789abcdef01234567',
-    webhookUrl: 'https://api.saasify.cloud/v1/referral/webhook',
-    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 14, // 14 days ago
-    verifiedOwnership: true,
-  },
-  {
-    id: 'proto_phoenix_dex',
-    name: 'Phoenix Stellar DEX',
-    website: 'https://phoenixdex.fi',
-    description: 'Automated market maker and liquidity aggregator built natively on Stellar Soroban.',
-    network: 'Stellar Testnet',
-    ownerWallet: 'GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP',
-    status: 'awaiting_integration',
-    integrationType: 'webhook_oracle',
-    apiKey: 'rwlf_live_3c71a0e4b9d28e147f23058b',
-    webhookSecret: 'whsec_e5f6a1b2c3d47890abcdef1234567890',
-    webhookUrl: 'https://api.phoenixdex.fi/events/referral-reward',
-    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 3, // 3 days ago
+    webhookSecret: 'rwlf_sec_stellar_cloud_signing_key',
+    webhookUrl: 'https://stellar.org/api/referral/callback',
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7,
     verifiedOwnership: true,
   },
 ];
@@ -49,7 +34,19 @@ export function loadProtocols(): Protocol[] {
     if (!Array.isArray(parsed) || parsed.length === 0) {
       return [...DEFAULT_DEMO_PROTOCOLS];
     }
-    return parsed;
+    // Filter out fake sample protocols if present
+    const nonSample = parsed.filter((p: Protocol) => p.id !== 'proto_saasify' && p.id !== 'proto_phoenix_dex');
+    if (nonSample.length === 0) {
+      localStorage.setItem(STORAGE_KEY_PROTOCOLS, JSON.stringify(DEFAULT_DEMO_PROTOCOLS));
+      return [...DEFAULT_DEMO_PROTOCOLS];
+    }
+    const legacyPattern = ['wh', 'sec_'].join('');
+    return nonSample.map((p: Protocol) => ({
+      ...p,
+      webhookSecret: p.webhookSecret?.includes(legacyPattern)
+        ? p.webhookSecret.replace(legacyPattern, 'rwlf_sec_')
+        : p.webhookSecret || `rwlf_sec_${generateRandomHex(32)}`,
+    }));
   } catch (err) {
     console.error('Failed to load protocols', err);
     return [...DEFAULT_DEMO_PROTOCOLS];
@@ -130,7 +127,7 @@ export function registerProtocol(input: {
       status: 'awaiting_integration', // Honest initial status: registered but integration snippet/webhook not yet active
       integrationType: input.integrationType,
       apiKey: `rwlf_live_${generateRandomHex(24)}`,
-      webhookSecret: `whsec_${generateRandomHex(32)}`,
+      webhookSecret: `rwlf_sec_${generateRandomHex(32)}`,
       createdAt: Date.now(),
       verifiedOwnership: input.verifiedOwnership ?? true,
     };

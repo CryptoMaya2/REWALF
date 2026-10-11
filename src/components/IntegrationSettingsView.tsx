@@ -107,7 +107,7 @@ export const IntegrationSettingsView: React.FC<IntegrationSettingsViewProps> = (
     const payload: WebhookConversionPayload = {
       eventId: testEventId,
       orderId: testOrderId,
-      campaignCode: 'saas91x',
+      campaignCode: 'xlm77a',
       referrerAddress: testReferrer,
       amountPaid: '299.00',
       rewardAmount: testRewardAmount,
@@ -504,7 +504,8 @@ export const IntegrationSettingsView: React.FC<IntegrationSettingsViewProps> = (
 import crypto from 'crypto';
 
 export async function reportVerifiedConversion(order) {
-  const secret = '${selectedProtocol?.webhookSecret || 'whsec_YOUR_SECRET'}';
+  // Read signing secret from server environment variable
+  const secret = process.env.REWALF_WEBHOOK_SECRET || '${selectedProtocol?.webhookSecret || 'YOUR_SIGNING_SECRET'}';
   const payload = {
     eventId: crypto.randomUUID(),
     orderId: order.id,

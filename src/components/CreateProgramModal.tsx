@@ -55,8 +55,8 @@ export const CreateProgramModal: React.FC<CreateProgramModalProps> = ({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form State
-  const [customerLabel, setCustomerLabel] = useState('Enterprise Subscription #402');
-  const [targetUrl, setTargetUrl] = useState('https://saasify.cloud/pricing');
+  const [customerLabel, setCustomerLabel] = useState('Stellar Cloud Validator Node');
+  const [targetUrl, setTargetUrl] = useState('https://stellar.org/learn');
   const [partnerType, setPartnerType] = useState<'open_marketplace' | 'specific_partner'>('open_marketplace');
   const [referrerAddress, setReferrerAddress] = useState('');
   const [rewardPerConversion, setRewardPerConversion] = useState('25');

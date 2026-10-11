@@ -18,7 +18,11 @@ import {
   authenticateConversionWebhook,
   resetIdempotencyCache,
   type WebhookConversionPayload,
-} from '../security/conversionVerifier';
+} from '../security/conversionVerifier.ts';
+import {
+  verifyStripeWebhookSignature,
+  generateTestStripeSignature,
+} from '../server/stripeWebhookHandler.ts';
 
 export interface TestCaseResult {
   testName: string;
@@ -38,7 +42,7 @@ export async function runWorkflowVerificationTests(): Promise<{
   const results: TestCaseResult[] = [];
   resetIdempotencyCache();
 
-  const mockSecret = 'whsec_7b4c6e80b435f524da478546123490b4e05466c1b3f9bb8693c0429f5f0b548d';
+  const mockSecret = 'rwlf_mock_test_webhook_signing_secret_nonfunctional_fixture';
   const businessAddress = 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
   const legitimateReferrer = 'GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP';
 
@@ -312,6 +316,141 @@ export async function runWorkflowVerificationTests(): Promise<{
       expectedResult: 'PAID allows claim; CLAIMED rejects repeated claim',
       actualResult: `first: ${firstAttempt}, second: ${secondAttempt}`,
       details: 'Escrow settlement enforces one-time settlement transition.',
+    });
+  }
+
+  // TEST 9: Server-Side Stripe Webhook - Valid Signature on Raw Request Body
+  {
+    const fakeSecret = 'mock_test_nonfunctional_stripe_signing_secret';
+    const rawPayload = JSON.stringify({
+      id: 'evt_test_checkout_001',
+      object: 'event',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_mock_order_1001',
+          amount_total: 29900,
+          currency: 'usd',
+          client_reference_id: 'saas91x',
+        },
+      },
+    });
+
+    const signatureHeader = generateTestStripeSignature(rawPayload, fakeSecret);
+    const verification = verifyStripeWebhookSignature({
+      rawBody: rawPayload,
+      signatureHeader,
+      secret: fakeSecret,
+    });
+
+    results.push({
+      testName: 'Test 9: Server-Side Stripe Webhook - Valid Signature on Raw Request Body',
+      passed: verification.valid === true && verification.event?.id === 'evt_test_checkout_001',
+      expectedResult: 'VALID_EVENT_CONSTRUCTED',
+      actualResult: verification.valid ? 'VALID_EVENT_CONSTRUCTED' : verification.errorCode || 'FAILED',
+      details: verification.errorMessage || 'Constructed Stripe event verified using official Stripe SDK.',
+    });
+  }
+
+  // TEST 10: Server-Side Stripe Webhook - Tampered Body Rejection
+  {
+    const fakeSecret = 'mock_test_nonfunctional_stripe_signing_secret';
+    const originalPayload = JSON.stringify({
+      id: 'evt_test_checkout_002',
+      object: 'event',
+      type: 'payment_intent.succeeded',
+      data: { object: { amount: 5000 } },
+    });
+
+    const signatureHeader = generateTestStripeSignature(originalPayload, fakeSecret);
+    const tamperedPayload = JSON.stringify({
+      id: 'evt_test_checkout_002',
+      object: 'event',
+      type: 'payment_intent.succeeded',
+      data: { object: { amount: 500000 } },
+    });
+
+    const verification = verifyStripeWebhookSignature({
+      rawBody: tamperedPayload,
+      signatureHeader,
+      secret: fakeSecret,
+    });
+
+    results.push({
+      testName: 'Test 10: Server-Side Stripe Webhook - Tampered Body Rejection',
+      passed: verification.valid === false && verification.errorCode === 'SIGNATURE_VERIFICATION_FAILED',
+      expectedResult: 'SIGNATURE_VERIFICATION_FAILED',
+      actualResult: verification.errorCode || 'UNKNOWN',
+      details: verification.errorMessage,
+    });
+  }
+
+  // TEST 11: Server-Side Stripe Webhook - Mismatched Secret Rejection
+  {
+    const correctSecret = 'mock_test_nonfunctional_stripe_signing_secret_1';
+    const wrongSecret = 'mock_test_nonfunctional_stripe_signing_secret_wrong';
+    const rawPayload = JSON.stringify({ id: 'evt_test_003', object: 'event', type: 'charge.succeeded' });
+
+    const signatureHeader = generateTestStripeSignature(rawPayload, correctSecret);
+    const verification = verifyStripeWebhookSignature({
+      rawBody: rawPayload,
+      signatureHeader,
+      secret: wrongSecret,
+    });
+
+    results.push({
+      testName: 'Test 11: Server-Side Stripe Webhook - Mismatched Secret Rejection',
+      passed: verification.valid === false && verification.errorCode === 'SIGNATURE_VERIFICATION_FAILED',
+      expectedResult: 'SIGNATURE_VERIFICATION_FAILED',
+      actualResult: verification.errorCode || 'UNKNOWN',
+      details: verification.errorMessage,
+    });
+  }
+
+  // TEST 12: Server-Side Stripe Webhook - Missing Raw Body & Missing Signature Rejection
+  {
+    const fakeSecret = 'mock_test_nonfunctional_stripe_signing_secret';
+    const resNoBody = verifyStripeWebhookSignature({
+      rawBody: '',
+      signatureHeader: 't=123,v1=abc',
+      secret: fakeSecret,
+    });
+
+    const resNoSig = verifyStripeWebhookSignature({
+      rawBody: '{"id":"evt_test"}',
+      signatureHeader: null,
+      secret: fakeSecret,
+    });
+
+    const passed =
+      resNoBody.valid === false &&
+      resNoBody.errorCode === 'MISSING_RAW_BODY' &&
+      resNoSig.valid === false &&
+      resNoSig.errorCode === 'MISSING_SIGNATURE';
+
+    results.push({
+      testName: 'Test 12: Server-Side Stripe Webhook - Missing Raw Body & Missing Signature Rejection',
+      passed,
+      expectedResult: 'MISSING_RAW_BODY & MISSING_SIGNATURE',
+      actualResult: `${resNoBody.errorCode} & ${resNoSig.errorCode}`,
+      details: 'Strict enforcement of raw payload and signature headers.',
+    });
+  }
+
+  // TEST 13: Server-Side Stripe Webhook - Missing Secret Configuration Rejection
+  {
+    const verification = verifyStripeWebhookSignature({
+      rawBody: '{"id":"evt_test"}',
+      signatureHeader: 't=123,v1=abc',
+      secret: '',
+    });
+
+    results.push({
+      testName: 'Test 13: Server-Side Stripe Webhook - Missing Secret Configuration Rejection',
+      passed: verification.valid === false && verification.errorCode === 'MISSING_SECRET',
+      expectedResult: 'MISSING_SECRET',
+      actualResult: verification.errorCode || 'UNKNOWN',
+      details: verification.errorMessage,
     });
   }
 

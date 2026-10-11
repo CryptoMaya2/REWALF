@@ -35,8 +35,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       a: 'No. That is the core safety feature. Once a business locks a reward into an escrow vault, the funds are held securely until the deadline. The business cannot withdraw the funds early, which gives the referrer complete confidence that the reward will be there when the deal closes.',
     },
     {
-      q: 'How fast does the referrer get paid when a customer buys?',
-      a: 'In about 3 to 5 seconds. Because Rewalf runs on the Stellar network, payouts settle almost instantly directly into the referrer’s wallet, with fees that cost a fraction of a cent.',
+      q: 'How fast does the referrer receive their reward when a customer buys?',
+      a: 'Once customer payment is confirmed, the referrer clicks Claim. Because Rewalf runs on the Stellar network, the escrow payout transfers in about 3 to 5 seconds directly into the referrer’s wallet, with fees that cost a fraction of a cent.',
     },
     {
       q: 'What happens if no customer ever buys before the deadline?',
@@ -437,7 +437,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 {simulatorScenario === 'success' ? 'Customer Pays' : 'Deadline Passes'}
               </div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                {simulatorScenario === 'success' ? 'HMAC verified conversion' : 'Timelock elapsed'}
+                {simulatorScenario === 'success' ? 'Customer marked paid' : 'Timelock elapsed'}
               </div>
             </button>
 
@@ -465,10 +465,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </span>
               </div>
               <div style={{ fontSize: '13.5px', fontWeight: 700, marginTop: '6px' }}>
-                {simulatorScenario === 'success' ? 'Referrer Gets Paid' : 'Business Reclaims $50'}
+                {simulatorScenario === 'success' ? 'Referrer Clicks Claim' : 'Business Clicks Reclaim'}
               </div>
               <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                {simulatorScenario === 'success' ? 'Direct 3s wallet transfer' : 'Zero loss guaranteed'}
+                {simulatorScenario === 'success' ? 'Referrer claims escrow reward' : 'Business recovers unspent deposit'}
               </div>
             </button>
           </div>
@@ -584,7 +584,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 )}
                 {simulatorStep === 2 && simulatorScenario === 'success' && (
                   <span>
-                    👉 <strong>What just happened:</strong> A customer purchases via Sarah’s link. Acme’s server sends an HMAC-SHA256 authenticated event to Rewalf, cryptographically validating the deal.
+                    👉 <strong>What just happened:</strong> A customer purchases via Sarah’s link. The customer payment is confirmed (or simulated via the demo button), unlocking the reward in the Escrow Vault for Sarah.
                   </span>
                 )}
                 {simulatorStep === 2 && simulatorScenario === 'refund' && (
@@ -709,16 +709,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <ShieldCheck size={20} />
             </div>
             <div>
-              <div style={{ fontSize: '11px', color: 'var(--semantic-green)', fontWeight: 800, letterSpacing: '0.04em' }}>03 / CRYPTOGRAPHIC SETTLEMENT</div>
+              <div style={{ fontSize: '11px', color: 'var(--semantic-green)', fontWeight: 800, letterSpacing: '0.04em' }}>03 / ON-CHAIN SETTLEMENT</div>
               <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
-                HMAC-SHA256 Verification & Payout
+                Referrer Claim & Business Reclaim
               </h3>
             </div>
             <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              When a verified customer checks out, the business webhook triggers non-custodial smart escrow release. Payouts land in the promoter’s wallet with zero middleman interference.
+              Once customer payment is confirmed, the referrer clicks Claim to transfer the reward directly from the Escrow Vault to their wallet. If the deadline passes without payment, the business clicks Reclaim to return the deposit.
             </p>
             <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--semantic-green)' }}>
-              <ShieldCheck size={13} /> Replay-Protected Audit Log
+              <ShieldCheck size={13} /> Non-Custodial Escrow Vault
             </div>
           </div>
         </div>
