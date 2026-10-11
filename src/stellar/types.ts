@@ -101,7 +101,7 @@ export interface Agreement {
    * NEVER ship this field on mainnet. On mainnet, escrow signing must happen via a
    * server-side custodian, multi-sig, or hardware wallet — never client-side localStorage.
    */
-  escrowSecretKey: string;
+  escrowSecretKey?: string;
 
   // Stellar Testnet Transaction Hashes
   lockTxHash: string;

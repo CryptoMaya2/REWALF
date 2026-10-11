@@ -9,6 +9,7 @@ import {
 import {
   updateAgreementState,
   fastForwardDeadline,
+  getVaultSecret,
 } from '../store/agreementStore';
 import { PayoutTrace } from './PayoutTrace';
 import {
@@ -65,12 +66,22 @@ export const ProgramDetailDrawer: React.FC<ProgramDetailDrawerProps> = ({
       return;
     }
 
+    const vaultSecret = getVaultSecret(agreement.code);
+    if (!vaultSecret) {
+      setErrorDetail({
+        title: 'Vault Key Missing',
+        status: 400,
+        detail: 'Vault key not found in this browser. Create a new offer.',
+      });
+      return;
+    }
+
     setReclaiming(true);
     setReclaimStatus('Submitting Reclaim transaction to Stellar Testnet...');
     setErrorDetail(null);
 
     try {
-      const res = await reclaimRewardOnChain(agreement);
+      const res = await reclaimRewardOnChain(agreement, vaultSecret);
       updateAgreementState(agreement.code, 'RECLAIMED', {
         reclaimTxHash: res.reclaimTxHash,
       });
@@ -376,6 +387,21 @@ export const ProgramDetailDrawer: React.FC<ProgramDetailDrawerProps> = ({
                       {reclaiming ? reclaimStatus || 'Reclaiming...' : 'Reclaim Deposit to Business'}
                     </button>
                   )}
+                </div>
+              )}
+              {/* Error Detail Banner */}
+              {errorDetail && (
+                <div className="alert-box alert-error" id="reclaim-drawer-error-banner" style={{ marginTop: '12px' }}>
+                  <ShieldAlert size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ flex: 1 }}>
+                    <strong>{errorDetail.title} {errorDetail.status ? `(HTTP ${errorDetail.status})` : ''}</strong>
+                    <p style={{ fontSize: '12px', marginTop: '2px' }}>{errorDetail.detail}</p>
+                    {errorDetail.codes && errorDetail.codes.length > 0 && (
+                      <div style={{ marginTop: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.25)', padding: '5px 8px', borderRadius: '4px' }}>
+                        <strong>Horizon Result Codes:</strong> {errorDetail.codes.join(' • ')}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

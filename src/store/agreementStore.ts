@@ -23,6 +23,46 @@ export function generateReferralCode(): string {
   return code;
 }
 
+const VAULT_SECRET_KEY_PREFIX = 'vault_secret_';
+
+/**
+ * Store vault secret in localStorage keyed by offer code.
+ * Never committed to version control.
+ */
+export function saveVaultSecret(code: string, secretKey: string): void {
+  if (!code || !secretKey) return;
+  try {
+    localStorage.setItem(`${VAULT_SECRET_KEY_PREFIX}${code}`, secretKey);
+  } catch (err) {
+    console.error('Failed to save vault secret in localStorage', err);
+  }
+}
+
+/**
+ * Retrieve vault secret from localStorage for an offer code.
+ */
+export function getVaultSecret(code: string): string | null {
+  if (!code) return null;
+  try {
+    const direct = localStorage.getItem(`${VAULT_SECRET_KEY_PREFIX}${code}`) || localStorage.getItem(`rewalf_vault_secret_${code}`);
+    if (direct) return direct;
+
+    // Check if the current agreement stored in localStorage has escrowSecretKey from a previous local session
+    const raw = localStorage.getItem(STORAGE_KEY_AGREEMENTS);
+    if (raw) {
+      const list = JSON.parse(raw);
+      const found = Array.isArray(list) ? list.find((a: any) => a.code === code) : null;
+      if (found && found.escrowSecretKey && typeof found.escrowSecretKey === 'string' && found.escrowSecretKey.startsWith('S')) {
+        saveVaultSecret(code, found.escrowSecretKey);
+        return found.escrowSecretKey;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Real Stellar Testnet Campaign Offer
  * Confirmed on Stellar testnet ledger 5143879
@@ -50,7 +90,6 @@ export const REAL_TESTNET_AGREEMENT: Agreement = {
   deadline: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days remaining
   state: 'LOCKED',
   escrowPublicKey: 'GBDIQO6OMKOTQWVK6TVJ33DPIZ5EXD3R5POZURPI4JUV6577A246LFI5',
-  escrowSecretKey: 'SCUFFNC4VGVHTYNB766EH2VFEUNEJ4UR6SKNI2DL3V3O7QYBO2AMUPU6',
   lockTxHash: 'f03e38d1e0bc33a5c1114916ee79d575efbddbb5e7de19290eae777bb1ab1a81',
   createdAt: 1770747800000,
   conversions: [],
@@ -128,6 +167,9 @@ export function getAgreementByCode(code: string): Agreement | undefined {
  * Save or update single agreement
  */
 export function upsertAgreement(agreement: Agreement): void {
+  if (agreement.escrowSecretKey) {
+    saveVaultSecret(agreement.code, agreement.escrowSecretKey);
+  }
   const all = loadAgreements();
   const idx = all.findIndex((a) => a.code.toLowerCase() === agreement.code.toLowerCase());
   if (idx >= 0) {

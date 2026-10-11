@@ -9,6 +9,7 @@ import {
 import {
   updateAgreementState,
   fastForwardDeadline,
+  getVaultSecret,
 } from '../store/agreementStore';
 import {
   ArrowRightLeft,
@@ -61,12 +62,22 @@ export const PayoutsView: React.FC<PayoutsViewProps> = ({
   };
 
   const handleReclaim = async (agreement: Agreement) => {
+    const vaultSecret = getVaultSecret(agreement.code);
+    if (!vaultSecret) {
+      setErrorDetail({
+        title: 'Vault Key Missing',
+        status: 400,
+        detail: 'Vault key not found in this browser. Create a new offer.',
+      });
+      return;
+    }
+
     setReclaimingCode(agreement.code);
     setReclaimProgress('Signing and broadcasting Reclaim transaction on Stellar...');
     setErrorDetail(null);
 
     try {
-      const res = await reclaimRewardOnChain(agreement);
+      const res = await reclaimRewardOnChain(agreement, vaultSecret);
       updateAgreementState(agreement.code, 'RECLAIMED', {
         reclaimTxHash: res.reclaimTxHash,
       });
@@ -148,11 +159,16 @@ export const PayoutsView: React.FC<PayoutsViewProps> = ({
 
       {/* Error Alert */}
       {errorDetail && (
-        <div className="alert-box alert-error" id="reclaim-error-banner">
+        <div className="alert-box alert-error" id="reclaim-error-banner" style={{ marginBottom: '16px' }}>
           <ShieldAlert size={18} />
-          <div>
+          <div style={{ flex: 1 }}>
             <strong>{errorDetail.title} (HTTP {errorDetail.status})</strong>
             <p style={{ marginTop: '2px', fontSize: '12px' }}>{errorDetail.detail}</p>
+            {errorDetail.codes && errorDetail.codes.length > 0 && (
+              <div style={{ marginTop: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.25)', padding: '5px 8px', borderRadius: '4px' }}>
+                <strong>Horizon Result Codes:</strong> {errorDetail.codes.join(' • ')}
+              </div>
+            )}
           </div>
         </div>
       )}

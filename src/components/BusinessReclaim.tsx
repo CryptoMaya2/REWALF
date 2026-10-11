@@ -9,6 +9,7 @@ import {
   loadAgreements,
   updateAgreementState,
   fastForwardDeadline,
+  getVaultSecret,
 } from '../store/agreementStore';
 import {
   ArrowRightLeft,
@@ -60,13 +61,23 @@ export const BusinessReclaim: React.FC<BusinessReclaimProps> = ({
   };
 
   const handleReclaim = async (agreement: Agreement) => {
+    const vaultSecret = getVaultSecret(agreement.code);
+    if (!vaultSecret) {
+      setErrorDetail({
+        title: 'Vault Key Missing',
+        status: 400,
+        detail: 'Vault key not found in this browser. Create a new offer.',
+      });
+      return;
+    }
+
     setReclaimingCode(agreement.code);
     setReclaimProgress('Submitting Reclaim transaction to Stellar Testnet...');
     setErrorDetail(null);
 
     try {
       setReclaimProgress('1/2: Signing return transaction from Escrow Vault to Business...');
-      const res = await reclaimRewardOnChain(agreement);
+      const res = await reclaimRewardOnChain(agreement, vaultSecret);
 
       setReclaimProgress('2/2: Confirmed on Stellar testnet ledger!');
       updateAgreementState(agreement.code, 'RECLAIMED', {

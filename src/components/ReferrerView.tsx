@@ -11,6 +11,7 @@ import {
   updateAgreementState,
   recordReferralClick,
   verifyCustomerConversion,
+  getVaultSecret,
 } from '../store/agreementStore';
 import { PayoutTrace } from './PayoutTrace';
 import confetti from 'canvas-confetti';
@@ -145,13 +146,23 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
       return;
     }
 
+    const vaultSecret = getVaultSecret(agreement.code);
+    if (!vaultSecret) {
+      setErrorDetail({
+        title: 'Vault Key Missing',
+        status: 400,
+        detail: 'Vault key not found in this browser. Create a new offer.',
+      });
+      return;
+    }
+
     setClaiming(true);
     setClaimProgress('Submitting Claim transaction to Stellar Testnet...');
     setErrorDetail(null);
 
     try {
       setClaimProgress('1/2: Signing payout transaction from Escrow Vault to Referrer...');
-      const res = await claimRewardOnChain(agreement);
+      const res = await claimRewardOnChain(agreement, vaultSecret);
 
       setClaimProgress('2/2: Confirmed on Stellar testnet ledger!');
       const updated = updateAgreementState(agreement.code, 'CLAIMED', {
@@ -631,9 +642,26 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
         {errorDetail && (
           <div className="alert-box alert-error" id="claim-error-banner" style={{ marginBottom: '20px' }}>
             <AlertCircle size={18} />
-            <div>
+            <div style={{ flex: 1 }}>
               <strong>{errorDetail.title}</strong>
               <p style={{ fontSize: '12px', marginTop: '2px' }}>{errorDetail.detail}</p>
+              {errorDetail.codes && errorDetail.codes.length > 0 && (
+                <div style={{ marginTop: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)', background: 'rgba(0,0,0,0.25)', padding: '5px 8px', borderRadius: '4px' }}>
+                  <strong>Horizon Result Codes:</strong> {errorDetail.codes.join(' • ')}
+                </div>
+              )}
+              {errorDetail.detail.includes('Create a new offer') && (
+                <div style={{ marginTop: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={onNavigateToBusiness}
+                    style={{ fontSize: '11.5px', padding: '5px 12px' }}
+                  >
+                    Go to Programs to Create a New Offer
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
