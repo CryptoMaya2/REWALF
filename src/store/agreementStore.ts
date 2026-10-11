@@ -7,7 +7,7 @@ import type {
 } from '../stellar/types';
 import { generateTestnetKeypair, getAccountBalances } from '../stellar/stellarService';
 
-const STORAGE_KEY_AGREEMENTS = 'rewalf_agreements_v1';
+const STORAGE_KEY_AGREEMENTS = 'rewalf_agreements_v2'; // bumped: removed fake Stellar tx hashes
 const STORAGE_KEY_BUSINESS_WALLET = 'rewalf_business_wallet_v1';
 const STORAGE_KEY_REFERRER_WALLET = 'rewalf_referrer_wallet_v1';
 
@@ -45,10 +45,10 @@ export const DEFAULT_DEMO_AGREEMENTS: Agreement[] = [
     assetCode: 'USDC',
     deadline: Date.now() + 1000 * 60 * 60 * 18, // 18 hours remaining
     state: 'PAID',
-    escrowPublicKey: 'GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGZS3MGDQKJZ5EFQWI5U73',
+    escrowPublicKey: 'GDEMO_ESCROW_SAAS91X_TESTNET_PLACEHOLDER_NOT_REAL',
     escrowSecretKey: 'SDEMO_TESTNET_ONLY_NEVER_MAINNET',
-    lockTxHash: '40d28bb461e1b8eb300cb105e1fc41459424c883e580e031b2658a5c3bb96362',
-    paidTxHash: '7b4c6e80b435f524da478546123490b4e05466c1b3f9bb8693c0429f5f0b548d',
+    lockTxHash: 'DEMO_NO_REAL_TX_saas91x_lock',
+    paidTxHash: 'DEMO_NO_REAL_TX_saas91x_paid',
     createdAt: Date.now() - 1000 * 60 * 60 * 6,
     paidAt: Date.now() - 1000 * 60 * 45,
     conversions: [
@@ -117,9 +117,9 @@ export const DEFAULT_DEMO_AGREEMENTS: Agreement[] = [
     assetCode: 'XLM',
     deadline: Date.now() + 1000 * 60 * 60 * 4, // 4 hours remaining
     state: 'LOCKED',
-    escrowPublicKey: 'GDOEVDDBU6OBWKL7VHDAOKD77UP4DHNBJKAEBY2AZIHRN63RESO2PFI',
+    escrowPublicKey: 'GDEMO_ESCROW_DEFI44K_TESTNET_PLACEHOLDER_NOT_REAL',
     escrowSecretKey: 'SDEMO_TESTNET_ONLY_NEVER_MAINNET',
-    lockTxHash: '8e9f1a23b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d',
+    lockTxHash: 'DEMO_NO_REAL_TX_defi44k_lock',
     createdAt: Date.now() - 1000 * 60 * 90,
     conversions: [],
   },
@@ -144,11 +144,11 @@ export const DEFAULT_DEMO_AGREEMENTS: Agreement[] = [
     assetCode: 'USDC',
     deadline: Date.now() - 1000 * 60 * 60 * 12,
     state: 'CLAIMED',
-    escrowPublicKey: 'GCTFMTC55ZXCF74GTAU7BGBKYRWKV56BGPNXHKBHVOL3ALXHXBTZ5ON',
+    escrowPublicKey: 'GDEMO_ESCROW_NODE88Q_TESTNET_PLACEHOLDER_NOT_REAL',
     escrowSecretKey: 'SDEMO_TESTNET_ONLY_NEVER_MAINNET',
-    lockTxHash: '1f3c5e7a9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7a9b1d3f',
-    paidTxHash: '2a4b6c8d0e2f4a6c8e0b2d4f6a8c0e2b4d6f8a0c2e4b6d8f0a2c4e6b8d0e2f4a',
-    claimTxHash: '9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e',
+    lockTxHash: 'DEMO_NO_REAL_TX_node88q_lock',
+    paidTxHash: 'DEMO_NO_REAL_TX_node88q_paid',
+    claimTxHash: 'DEMO_NO_REAL_TX_node88q_claim',
     createdAt: Date.now() - 1000 * 60 * 60 * 24,
     paidAt: Date.now() - 1000 * 60 * 60 * 18,
     claimedAt: Date.now() - 1000 * 60 * 60 * 14,
@@ -190,10 +190,10 @@ export const DEFAULT_DEMO_AGREEMENTS: Agreement[] = [
     assetCode: 'USDC',
     deadline: Date.now() - 1000 * 60 * 60 * 5,
     state: 'RECLAIMED',
-    escrowPublicKey: 'GBZSF4LRE4ZQLKAQ5JV5EDEZFLP7O4DXVLMKQP3BJOXTFHPWBJYLXDL',
+    escrowPublicKey: 'GDEMO_ESCROW_API22Z_TESTNET_PLACEHOLDER_NOT_REAL',
     escrowSecretKey: 'SDEMO_TESTNET_ONLY_NEVER_MAINNET',
-    lockTxHash: '3b5d7f9a1c3e5b7d9f1a3c5e7a9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b',
-    reclaimTxHash: '5f7a9b1c3e5b7d9f1a3c5e7a9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d',
+    lockTxHash: 'DEMO_NO_REAL_TX_api22z_lock',
+    reclaimTxHash: 'DEMO_NO_REAL_TX_api22z_reclaim',
     createdAt: Date.now() - 1000 * 60 * 60 * 30,
     reclaimedAt: Date.now() - 1000 * 60 * 60 * 4,
     conversions: [],

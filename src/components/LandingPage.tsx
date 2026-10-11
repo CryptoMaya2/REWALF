@@ -28,7 +28,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const faqs = [
     {
       q: 'Do I or my partners need to be crypto experts to use this?',
-      a: 'Not at all. You just connect a Stellar wallet (like Freighter or Albedo with one click) or use the built-in demo sandbox. Everything is designed like a regular, clean payment app. You set a dollar or token amount, set a deadline, and the system handles the escrow vault automatically.',
+      a: 'Not at all. You just connect a Stellar wallet (like Freighter or Albedo with one click) or use the built-in demo sandbox. Everything is designed like a regular, clean payment app. You set a dollar or token amount, set a deadline, and the on-chain escrow vault handles the rest.',
     },
     {
       q: 'Can a business take their money back before the referral happens?',
@@ -115,7 +115,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             onMouseOver={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
             onMouseOut={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
           >
-            Live Demo
+            Simulator
           </a>
           <a
             href="#use-cases"
@@ -210,11 +210,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               fontFamily: 'var(--font-display)',
             }}
           >
-            Referral rewards that pay out{' '}
+            Referral rewards claimed instantly{' '}
             <span className="gradient-text-lime">
-              automatically
+              on Stellar
             </span>{' '}
-            when customers buy.
+            — with escrow you can verify.
           </h1>
 
           {/* Conversational Explanation */}
@@ -228,9 +228,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             }}
           >
             No unpaid invoices. No chasing payments for 60 days.
-            Businesses lock reward money into a secure digital vault upfront.
-            When a referred customer completes their purchase, the referrer gets paid instantly.
-            If nobody buys before the deadline, the business gets 100% of their money back.
+            Businesses lock reward money into a secure on-chain vault upfront.
+            When a referred customer completes their purchase, the referrer clicks <strong>Claim</strong> and receives payment in seconds via Stellar.
+            If nobody buys before the deadline, the business clicks <strong>Reclaim</strong> and gets 100% of their money back.
           </p>
 
           {/* Action Buttons */}
@@ -594,7 +594,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 )}
                 {simulatorStep === 3 && simulatorScenario === 'success' && (
                   <span>
-                    👉 <strong>What just happened:</strong> Sarah claims her bounty and receives $50 USDC in 3.2 seconds directly from the contract. Zero manual invoicing. Zero delayed payouts.
+                    👉 <strong>What just happened:</strong> Sarah clicks <strong>Claim</strong> in her referrer dashboard. The Stellar transaction settles in ~3 seconds, sending $50 USDC directly from the escrow contract to her wallet. Zero manual invoicing.
                   </span>
                 )}
                 {simulatorStep === 3 && simulatorScenario === 'refund' && (
@@ -852,7 +852,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 With Rewalf:
               </div>
               <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.5 }}>
-                Alice locks the $100 bounty with a 14-day deadline. If Bob brings a paying customer, Bob gets paid automatically. If no one buys, Alice simply <strong>clicks Reclaim and gets her $100 back</strong>.
+                Alice locks the $100 bounty with a 14-day deadline. If Bob brings a paying customer, Bob <strong>clicks Claim</strong> and receives $100 in seconds via Stellar. If no one buys, Alice simply <strong>clicks Reclaim and gets her $100 back</strong>.
               </p>
             </div>
           </div>
@@ -1101,7 +1101,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               margin: '0 auto 28px',
             }}
           >
-            Create an agreement, test the referrer claim portal, and see the automated escrow mechanics in action.
+            Create an agreement, test the referrer Claim portal, and see the trustless escrow mechanics in action.
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>

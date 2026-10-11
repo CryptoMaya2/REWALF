@@ -531,19 +531,22 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
         </div>
 
         {/* Lock Transaction Evidence */}
-        {agreement.lockTxHash && (
-          <div className="trace-evidence" style={{ marginBottom: '20px' }}>
-            <span style={{ color: 'var(--text-tertiary)' }}>On-Chain Lock Tx:</span>
-            <a
-              href={getStellarExpertTxUrl(agreement.lockTxHash)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span>{agreement.lockTxHash}</span>
-              <ExternalLink size={12} />
-            </a>
-          </div>
-        )}
+        {agreement.lockTxHash && (() => {
+          const explorerUrl = getStellarExpertTxUrl(agreement.lockTxHash);
+          return (
+            <div className="trace-evidence" style={{ marginBottom: '20px' }}>
+              <span style={{ color: 'var(--text-tertiary)' }}>On-Chain Lock Tx:</span>
+              {explorerUrl ? (
+                <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
+                  <span>{agreement.lockTxHash}</span>
+                  <ExternalLink size={12} />
+                </a>
+              ) : (
+                <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>Demo fixture — no on-chain transaction</span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* AUTHENTICATED CUSTOMER ACTION / CONVERSION VERIFICATION SIMULATOR */}
         <div

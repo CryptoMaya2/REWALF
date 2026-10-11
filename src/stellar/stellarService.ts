@@ -13,16 +13,20 @@ export const STELLAR_EXPERT_BASE = import.meta.env.VITE_STELLAR_EXPERT_URL || 'h
 export const horizonServer = new StellarSdk.Horizon.Server(HORIZON_URL);
 
 /**
- * Format stellar expert transaction link
+ * Format stellar expert transaction link.
+ * Returns undefined for demo/placeholder hashes so the UI can omit the link.
  */
-export function getStellarExpertTxUrl(txHash: string): string {
+export function getStellarExpertTxUrl(txHash: string): string | undefined {
+  if (!txHash || txHash.startsWith('DEMO_') || txHash.startsWith('sim_')) return undefined;
   return `${STELLAR_EXPERT_BASE}/tx/${txHash}`;
 }
 
 /**
- * Format stellar expert account link
+ * Format stellar expert account link.
+ * Returns undefined for demo/placeholder addresses so the UI can omit the link.
  */
-export function getStellarExpertAccountUrl(publicKey: string): string {
+export function getStellarExpertAccountUrl(publicKey: string): string | undefined {
+  if (!publicKey || publicKey.startsWith('GDEMO_')) return undefined;
   return `${STELLAR_EXPERT_BASE}/account/${publicKey}`;
 }
 

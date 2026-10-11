@@ -290,15 +290,17 @@ export const PayoutsView: React.FC<PayoutsViewProps> = ({
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600 }}>
                           {a.referrerAddress.slice(0, 6)}...{a.referrerAddress.slice(-6)}
                         </span>
-                        <a
-                          href={getStellarExpertAccountUrl(a.referrerAddress)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ color: 'var(--text-tertiary)' }}
-                          title="View on Stellar Expert"
-                        >
-                          <ExternalLink size={11} />
-                        </a>
+                        {getStellarExpertAccountUrl(a.referrerAddress) && (
+                          <a
+                            href={getStellarExpertAccountUrl(a.referrerAddress)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--text-tertiary)' }}
+                            title="View on Stellar Expert"
+                          >
+                            <ExternalLink size={11} />
+                          </a>
+                        )}
                       </div>
                     </td>
 
@@ -327,22 +329,27 @@ export const PayoutsView: React.FC<PayoutsViewProps> = ({
                     </td>
 
                     <td>
-                      {relevantHash ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-blue)' }}>
-                            {relevantHash.slice(0, 8)}...{relevantHash.slice(-6)}
-                          </span>
-                          <a
-                            href={getStellarExpertTxUrl(relevantHash)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: 'var(--accent-blue)' }}
-                            title="Verify on Stellar Expert"
-                          >
-                            <ExternalLink size={11} />
-                          </a>
-                        </div>
-                      ) : (
+                      {relevantHash ? (() => {
+                          const txUrl = getStellarExpertTxUrl(relevantHash);
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: txUrl ? 'var(--accent-blue)' : 'var(--text-tertiary)' }}>
+                                {txUrl ? `${relevantHash.slice(0, 8)}...${relevantHash.slice(-6)}` : 'Demo'}
+                              </span>
+                              {txUrl && (
+                                <a
+                                  href={txUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: 'var(--accent-blue)' }}
+                                  title="Verify on Stellar Expert"
+                                >
+                                  <ExternalLink size={11} />
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })() : (
                         <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Pending</span>
                       )}
                     </td>

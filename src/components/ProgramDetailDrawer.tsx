@@ -262,25 +262,34 @@ export const ProgramDetailDrawer: React.FC<ProgramDetailDrawerProps> = ({
               </div>
 
               {/* Initial Lock Transaction */}
-              {agreement.lockTxHash && (
-                <div className="card-subtle" style={{ padding: '10px 14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>Vault Creation Tx Hash</span>
-                    <a
-                      href={getStellarExpertTxUrl(agreement.lockTxHash)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-outline btn-sm"
-                      style={{ padding: '2px 6px', fontSize: '11px' }}
-                    >
-                      Explorer <ExternalLink size={11} />
-                    </a>
+              {agreement.lockTxHash && (() => {
+                const explorerUrl = getStellarExpertTxUrl(agreement.lockTxHash);
+                return (
+                  <div className="card-subtle" style={{ padding: '10px 14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>Vault Creation Tx Hash</span>
+                      {explorerUrl ? (
+                        <a
+                          href={explorerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-outline btn-sm"
+                          style={{ padding: '2px 6px', fontSize: '11px' }}
+                        >
+                          Explorer <ExternalLink size={11} />
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: 'rgba(248,200,100,0.12)', color: 'var(--semantic-amber)', border: '1px solid rgba(248,200,100,0.2)', fontWeight: 600 }}>
+                          Sample data
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: explorerUrl ? 'var(--accent-blue)' : 'var(--text-tertiary)', marginTop: '4px', wordBreak: 'break-all' }}>
+                      {explorerUrl ? agreement.lockTxHash : 'No on-chain transaction — demo fixture only'}
+                    </div>
                   </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--accent-blue)', marginTop: '4px', wordBreak: 'break-all' }}>
-                    {agreement.lockTxHash}
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
 

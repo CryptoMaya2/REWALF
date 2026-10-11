@@ -231,44 +231,47 @@ export const BusinessReclaim: React.FC<BusinessReclaimProps> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
                   <div style={{ fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ color: 'var(--text-dim)' }}>Lock Tx:</span>
-                    <a
-                      href={getStellarExpertTxUrl(agreement.lockTxHash)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: 'var(--stellar-cyan)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                    >
-                      {agreement.lockTxHash.slice(0, 16)}...
-                      <ExternalLink size={11} />
-                    </a>
+                    {(() => {
+                      const url = getStellarExpertTxUrl(agreement.lockTxHash);
+                      return url ? (
+                        <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--stellar-cyan)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          {agreement.lockTxHash.slice(0, 16)}...<ExternalLink size={11} />
+                        </a>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture — no on-chain tx</span>
+                      );
+                    })()}
                   </div>
 
                   {agreement.claimTxHash && (
                     <div style={{ fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ color: 'var(--text-dim)' }}>Claim Tx:</span>
-                      <a
-                        href={getStellarExpertTxUrl(agreement.claimTxHash)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        {agreement.claimTxHash.slice(0, 16)}...
-                        <ExternalLink size={11} />
-                      </a>
+                      {(() => {
+                        const url = getStellarExpertTxUrl(agreement.claimTxHash!);
+                        return url ? (
+                          <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {agreement.claimTxHash!.slice(0, 16)}...<ExternalLink size={11} />
+                          </a>
+                        ) : (
+                          <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture — no on-chain tx</span>
+                        );
+                      })()}
                     </div>
                   )}
 
                   {agreement.reclaimTxHash && (
                     <div style={{ fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ color: 'var(--text-dim)' }}>Reclaim Tx:</span>
-                      <a
-                        href={getStellarExpertTxUrl(agreement.reclaimTxHash)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#cbd5e1', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        {agreement.reclaimTxHash.slice(0, 16)}...
-                        <ExternalLink size={11} />
-                      </a>
+                      {(() => {
+                        const url = getStellarExpertTxUrl(agreement.reclaimTxHash!);
+                        return url ? (
+                          <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: '#cbd5e1', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {agreement.reclaimTxHash!.slice(0, 16)}...<ExternalLink size={11} />
+                          </a>
+                        ) : (
+                          <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture — no on-chain tx</span>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
