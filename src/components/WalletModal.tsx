@@ -289,7 +289,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({
                 MetaMask, Rabby, and OKX are Ethereum (EVM) wallets and cannot sign Stellar transactions. Use **1-Click Sandbox** below for instant testing, or **Albedo** for zero-install signing.
               </div>
 
-              {/* Option 1: Disposable Sandbox Mode (Recommended for testing) */}
+              {/* Option 1: Create & Connect Stellar Testnet Account (Sandbox Mode) */}
               <button
                 type="button"
                 className="card-subtle"
@@ -298,6 +298,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '14px 16px',
+
                   cursor: 'pointer',
                   border: '1px solid var(--accent-lime-border)',
                   background: 'rgba(184, 243, 107, 0.06)',
@@ -308,15 +309,16 @@ export const WalletModal: React.FC<WalletModalProps> = ({
               >
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <strong style={{ fontSize: '13.5px', color: 'var(--accent-lime)' }}>1-Click Sandbox Test Wallet</strong>
-                    <span className="status-badge badge-claimed" style={{ fontSize: '10px' }}>Recommended for Demo</span>
+                    <strong style={{ fontSize: '13.5px', color: 'var(--accent-lime)' }}>Create & Connect Stellar Testnet Account</strong>
+                    <span className="status-badge badge-claimed" style={{ fontSize: '10px' }}>Instant Testnet Setup</span>
                   </div>
                   <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                    Instantly generates a funded testnet wallet with 10,000 XLM. No extension needed!
+                    Instantly creates and funds a fresh testnet keypair with 10,000 XLM via Friendbot. Zero extension required.
                   </p>
                 </div>
                 <Zap size={16} color="var(--accent-lime)" />
               </button>
+
 
               {/* Option 2: Albedo Web Signer (Zero-install) */}
               <button

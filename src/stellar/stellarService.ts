@@ -162,6 +162,122 @@ export async function generateTestnetKeypair(autoFund = true): Promise<{
 }
 
 /**
+ * Test creating an account on Stellar Testnet.
+ * Supports creating via Friendbot faucet or via an active source wallet/secret
+ * using StellarSdk.Operation.createAccount. Verifies ledger inclusion on Horizon.
+ */
+export async function testCreateAccountOnTestnet(options?: {
+  customKeypair?: StellarSdk.Keypair;
+  method?: 'friendbot' | 'create_account_op';
+  sourceWallet?: ConnectedWallet;
+  sourceSecretKey?: string;
+  startingBalance?: string;
+  onProgress?: (status: string) => void;
+}): Promise<{
+  success: boolean;
+  publicKey: string;
+  secretKey: string;
+  txHash?: string;
+  balanceXlm: string;
+  sequence?: string;
+  explorerUrl?: string;
+  error?: string;
+}> {
+  const kp = options?.customKeypair || StellarSdk.Keypair.random();
+  const publicKey = kp.publicKey();
+  const secretKey = kp.secret();
+
+  options?.onProgress?.('Generating Stellar keypair and preparing account...');
+
+  // Method 1: Submitting an explicit Operation.createAccount from a funded source
+  if (options?.method === 'create_account_op') {
+    let sourcePub = options.sourceWallet?.publicKey;
+    let fallbackKeypair: StellarSdk.Keypair | null = null;
+    if (!sourcePub && options.sourceSecretKey) {
+      fallbackKeypair = StellarSdk.Keypair.fromSecret(options.sourceSecretKey);
+      sourcePub = fallbackKeypair.publicKey();
+    }
+
+    if (!sourcePub) {
+      throw new Error('A connected funding wallet or secret key is required to test Operation.createAccount.');
+    }
+
+    options?.onProgress?.(`Loading source account ${sourcePub.slice(0, 8)}... from Horizon...`);
+    const sourceAccount = await horizonServer.loadAccount(sourcePub);
+
+    const startBal = options.startingBalance || '5.0000000';
+    options?.onProgress?.(`Building Operation.createAccount transaction with ${startBal} XLM starting balance...`);
+
+    const builder = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: StellarSdk.BASE_FEE,
+      networkPassphrase: NETWORK_PASSPHRASE,
+    })
+      .addOperation(
+        StellarSdk.Operation.createAccount({
+          destination: publicKey,
+          startingBalance: startBal,
+        })
+      )
+      .setTimeout(60);
+
+    const tx = builder.build();
+
+    let finalTx: StellarSdk.Transaction = tx;
+    if (options.sourceWallet) {
+      options?.onProgress?.(`Requesting signature in ${options.sourceWallet.label || options.sourceWallet.walletType}...`);
+      finalTx = await signTransactionWithWallet(tx, options.sourceWallet);
+    } else if (fallbackKeypair) {
+      finalTx.sign(fallbackKeypair);
+    }
+
+    options?.onProgress?.('Broadcasting Operation.createAccount to Stellar Horizon Testnet...');
+    const submitRes = await horizonServer.submitTransaction(finalTx);
+
+    options?.onProgress?.('Confirming account existence on Horizon ledger...');
+    const balances = await getAccountBalances(publicKey);
+
+    return {
+      success: true,
+      publicKey,
+      secretKey,
+      txHash: submitRes.hash,
+      balanceXlm: balances.xlm,
+      sequence: balances.sequence,
+      explorerUrl: getStellarExpertAccountUrl(publicKey),
+    };
+  }
+
+  // Method 2: Create and fund via Friendbot faucet on Stellar Testnet
+  options?.onProgress?.('Requesting Friendbot faucet to fund and activate testnet account...');
+  const fundRes = await fundWithFriendbot(publicKey);
+
+  if (!fundRes.success) {
+    return {
+      success: false,
+      publicKey,
+      secretKey,
+      balanceXlm: '0.0000000',
+      error: fundRes.error || 'Friendbot failed to create account on testnet.',
+    };
+  }
+
+  options?.onProgress?.('Verifying account activation on Horizon ledger...');
+  const balances = await getAccountBalances(publicKey);
+
+  return {
+    success: balances.exists,
+    publicKey,
+    secretKey,
+    txHash: fundRes.hash,
+    balanceXlm: balances.xlm,
+    sequence: balances.sequence,
+    explorerUrl: getStellarExpertAccountUrl(publicKey),
+    error: balances.exists ? undefined : 'Account not found on Horizon testnet after creation.',
+  };
+}
+
+
+/**
  * 1. BUSINESS LOCK REWARD
  * Submits a real Stellar testnet transaction:
  * - Generates dedicated Escrow Vault Keypair

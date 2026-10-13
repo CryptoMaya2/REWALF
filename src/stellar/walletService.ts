@@ -66,17 +66,29 @@ export async function connectAlbedo(): Promise<ConnectedWallet> {
  */
 export async function connectSandbox(): Promise<ConnectedWallet> {
   const kp = await generateTestnetKeypair(true);
+  return connectTestAccount(kp.publicKey, kp.secretKey, 'Testnet Sandbox (Demo)');
+}
+
+/**
+ * Connect a specific generated/tested testnet account keypair
+ */
+export function connectTestAccount(
+  publicKey: string,
+  secretKey?: string,
+  label = 'Testnet Account'
+): ConnectedWallet {
   const wallet: ConnectedWallet = {
-    publicKey: kp.publicKey,
+    publicKey,
     walletType: 'sandbox',
-    label: 'Testnet Sandbox (Demo)',
+    label,
     balanceXlm: '10000.0000000',
     balanceUsdc: '0.0000000',
-    secretKey: kp.secretKey,
+    secretKey,
   };
   saveConnectedWallet(wallet);
   return wallet;
 }
+
 
 /**
  * Connect any Stellar address in view-only / manual mode

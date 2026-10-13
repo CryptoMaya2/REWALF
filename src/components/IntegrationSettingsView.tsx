@@ -5,7 +5,11 @@ import {
   FRIENDBOT_URL,
   NETWORK_PASSPHRASE,
   fundWithFriendbot,
+  testCreateAccountOnTestnet,
+  getStellarExpertAccountUrl,
+  getStellarExpertTxUrl,
 } from '../stellar/stellarService';
+import { connectTestAccount } from '../stellar/walletService';
 import { resetAgreementsToFixtures, clearAllAgreements } from '../store/agreementStore';
 import { resetProtocolsToFixtures } from '../store/protocolStore';
 import {
@@ -29,7 +33,13 @@ import {
   Copy,
   Check,
   ShieldAlert,
+  UserPlus,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  Sparkles,
 } from 'lucide-react';
+
 
 interface IntegrationSettingsViewProps {
   protocols: Protocol[];
@@ -78,6 +88,25 @@ export const IntegrationSettingsView: React.FC<IntegrationSettingsViewProps> = (
     code: string;
     message: string;
   } | null>(null);
+
+  // Stellar Testnet Account Creation Tester State
+  const [testingCreateAccount, setTestingCreateAccount] = useState(false);
+  const [createAccountMethod, setCreateAccountMethod] = useState<'friendbot' | 'create_account_op'>('friendbot');
+  const [customStartingBalance, setCustomStartingBalance] = useState('10.00');
+  const [createAccountProgress, setCreateAccountProgress] = useState<string | null>(null);
+  const [createAccountResult, setCreateAccountResult] = useState<{
+    success: boolean;
+    publicKey: string;
+    secretKey: string;
+    balanceXlm: string;
+    sequence?: string;
+    txHash?: string;
+    explorerUrl?: string;
+    error?: string;
+  } | null>(null);
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [connectedAsTestAccount, setConnectedAsTestAccount] = useState(false);
+
 
   const selectedProtocol = protocols.find((p) => p.id === selectedProtocolId) || protocols[0];
 
@@ -140,7 +169,51 @@ export const IntegrationSettingsView: React.FC<IntegrationSettingsViewProps> = (
     });
   };
 
+  const handleTestCreateAccount = async () => {
+    setTestingCreateAccount(true);
+    setCreateAccountProgress('Generating keypair and initializing account on Stellar Testnet...');
+    setCreateAccountResult(null);
+    setConnectedAsTestAccount(false);
+
+    try {
+      const res = await testCreateAccountOnTestnet({
+        method: createAccountMethod,
+        sourceWallet: createAccountMethod === 'create_account_op' ? connectedWallet || undefined : undefined,
+        startingBalance: `${parseFloat(customStartingBalance || '10').toFixed(7)}`,
+        onProgress: (status) => setCreateAccountProgress(status),
+      });
+
+      setCreateAccountResult(res);
+      if (res.success) {
+        onRefreshWallets();
+      }
+    } catch (err: any) {
+      setCreateAccountResult({
+        success: false,
+        publicKey: '',
+        secretKey: '',
+        balanceXlm: '0',
+        error: err.message || 'Failed to create account on Stellar testnet.',
+      });
+    } finally {
+      setTestingCreateAccount(false);
+      setCreateAccountProgress(null);
+    }
+  };
+
+  const handleConnectCreatedAccount = () => {
+    if (!createAccountResult?.publicKey) return;
+    connectTestAccount(
+      createAccountResult.publicKey,
+      createAccountResult.secretKey,
+      'Stellar Testnet Account'
+    );
+    setConnectedAsTestAccount(true);
+    onRefreshWallets();
+  };
+
   const handleFundConnected = async () => {
+
     if (!connectedWallet) {
       onOpenWalletModal();
       return;
@@ -355,7 +428,249 @@ export const IntegrationSettingsView: React.FC<IntegrationSettingsViewProps> = (
         )}
       </div>
 
+      {/* INTERACTIVE STELLAR TESTNET ACCOUNT CREATION TESTER */}
+      <div className="card" style={{ border: '1px solid var(--border-card)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <UserPlus size={18} color="var(--accent-lime)" />
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Stellar Testnet Account Creation Tester
+              </h3>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+              Generate cryptographic Ed25519 keypairs and test account activation on the live Stellar testnet ledger.
+            </p>
+          </div>
+
+          <span className="network-badge">
+            <span className="pulse-dot" />
+            Horizon Testnet
+          </span>
+        </div>
+
+        {/* Method Selection Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className={`btn btn-sm ${createAccountMethod === 'friendbot' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setCreateAccountMethod('friendbot')}
+            disabled={testingCreateAccount}
+          >
+            <Zap size={13} />
+            Friendbot Faucet (+10k XLM)
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${createAccountMethod === 'create_account_op' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setCreateAccountMethod('create_account_op')}
+            disabled={testingCreateAccount}
+          >
+            <Sparkles size={13} />
+            Operation.createAccount (From Connected Wallet)
+          </button>
+        </div>
+
+        {createAccountMethod === 'create_account_op' && (
+          <div className="card-subtle" style={{ padding: '14px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Source Funding Signer:
+              </span>
+              {connectedWallet ? (
+                <span className="status-badge badge-active" style={{ fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                  {connectedWallet.publicKey.slice(0, 6)}...{connectedWallet.publicKey.slice(-4)} ({parseFloat(connectedWallet.balanceXlm || '0').toFixed(2)} XLM)
+                </span>
+              ) : (
+                <button type="button" className="btn btn-outline btn-sm" onClick={onOpenWalletModal}>
+                  Connect Signer to Fund
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Starting Balance (XLM):</label>
+              <input
+                type="number"
+                min="1"
+                step="0.5"
+                value={customStartingBalance}
+                onChange={(e) => setCustomStartingBalance(e.target.value)}
+                className="form-input font-mono"
+                style={{ width: '120px', padding: '6px 10px', fontSize: '12px' }}
+                disabled={testingCreateAccount}
+              />
+              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                (Minimum reserve requires at least 1.0 XLM)
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Action Button */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px' }}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={handleTestCreateAccount}
+            disabled={testingCreateAccount || (createAccountMethod === 'create_account_op' && !connectedWallet)}
+          >
+            <UserPlus size={14} />
+            {testingCreateAccount
+              ? (createAccountProgress || 'Creating Account on Testnet...')
+              : 'Test Create Account on Stellar Testnet'}
+          </button>
+
+          {testingCreateAccount && (
+            <span style={{ fontSize: '12px', color: 'var(--accent-lime)' }}>
+              Broadcasting to Horizon...
+            </span>
+          )}
+        </div>
+
+        {/* Progress Alert */}
+        {testingCreateAccount && createAccountProgress && (
+          <div className="alert-box alert-info" style={{ marginBottom: '16px' }}>
+            <span className="pulse-dot" />
+            <span style={{ fontSize: '12px' }}>{createAccountProgress}</span>
+          </div>
+        )}
+
+        {/* Creation Results Box */}
+        {createAccountResult && (
+          <div
+            className="card-subtle"
+            style={{
+              padding: '16px',
+              border: createAccountResult.success
+                ? '1px solid var(--accent-lime-border)'
+                : '1px solid rgba(255, 99, 132, 0.4)',
+              background: createAccountResult.success
+                ? 'rgba(184, 243, 107, 0.04)'
+                : 'rgba(255, 99, 132, 0.05)',
+            }}
+          >
+            {createAccountResult.success ? (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <CheckCircle2 size={16} color="var(--accent-lime)" />
+                    <strong style={{ fontSize: '13px', color: 'var(--accent-lime)' }}>
+                      Account Successfully Created & Verified on Stellar Testnet!
+                    </strong>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <a
+                      href={createAccountResult.explorerUrl || getStellarExpertAccountUrl(createAccountResult.publicKey)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline btn-sm"
+                    >
+                      <ExternalLink size={12} />
+                      Inspect on Stellar Expert
+                    </a>
+
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${connectedAsTestAccount ? 'btn-outline' : 'btn-primary'}`}
+                      onClick={handleConnectCreatedAccount}
+                    >
+                      {connectedAsTestAccount ? (
+                        <>
+                          <Check size={12} color="var(--accent-lime)" />
+                          Active Signer
+                        </>
+                      ) : (
+                        'Use as Active Wallet'
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                  {/* Public Key */}
+                  <div style={{ background: 'var(--surface-input)', padding: '10px 12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 700 }}>
+                        Created Public Key (Ed25519)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(createAccountResult.publicKey, 'testnet-pubkey')}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 0 }}
+                      >
+                        {copiedKey === 'testnet-pubkey' ? <Check size={12} color="var(--accent-lime)" /> : <Copy size={12} />}
+                      </button>
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-primary)', wordBreak: 'break-all', marginTop: '4px' }}>
+                      {createAccountResult.publicKey}
+                    </div>
+                  </div>
+
+                  {/* Secret Key */}
+                  <div style={{ background: 'var(--surface-input)', padding: '10px 12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 700 }}>
+                        Secret Key (Testnet Only)
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowSecretKey(!showSecretKey)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 0 }}
+                          title={showSecretKey ? 'Hide Secret Key' : 'Reveal Secret Key'}
+                        >
+                          {showSecretKey ? <EyeOff size={12} /> : <Eye size={12} />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(createAccountResult.secretKey, 'testnet-secret')}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 0 }}
+                        >
+                          {copiedKey === 'testnet-secret' ? <Check size={12} color="var(--accent-lime)" /> : <Copy size={12} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--accent-blue)', wordBreak: 'break-all', marginTop: '4px' }}>
+                      {showSecretKey ? createAccountResult.secretKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', fontSize: '12px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                  <div>
+                    Confirmed Balance: <strong style={{ color: 'var(--accent-lime)', fontFamily: 'var(--font-mono)' }}>{parseFloat(createAccountResult.balanceXlm).toFixed(2)} XLM</strong>
+                  </div>
+                  {createAccountResult.txHash && (
+                    <div>
+                      Tx Hash:{' '}
+                      <a
+                        href={getStellarExpertTxUrl(createAccountResult.txHash)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}
+                      >
+                        {createAccountResult.txHash.slice(0, 10)}...{createAccountResult.txHash.slice(-6)}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--semantic-red)' }}>
+                <AlertTriangle size={18} />
+                <span style={{ fontSize: '12px' }}>
+                  {createAccountResult.error || 'Failed to create test account on Stellar testnet.'}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* LIVE CRYPTOGRAPHIC WEBHOOK & HMAC TESTER */}
+
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <Webhook size={18} color="var(--accent-blue)" />
