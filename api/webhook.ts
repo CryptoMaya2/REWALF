@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { verifyStripeWebhookSignature } from '../src/server/stripeWebhookHandler.ts';
+import Stripe from 'stripe';
 
 export const config = {
   api: {
@@ -17,6 +17,21 @@ async function getRawBody(req: IncomingMessage): Promise<Buffer> {
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
+  // Allow health check on GET
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(
+      JSON.stringify({
+        status: 'ok',
+        service: 'Rewalf Stripe Webhook Receiver',
+        network: 'Stellar Testnet',
+        timestamp: Date.now(),
+      })
+    );
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.statusCode = 405;
     res.setHeader('Content-Type', 'application/json');
@@ -27,22 +42,28 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   try {
     const rawBody = await getRawBody(req);
     const signature = req.headers['stripe-signature'] as string | undefined;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    const result = verifyStripeWebhookSignature({
-      rawBody,
-      signatureHeader: signature,
-    });
-
-    if (!result.valid) {
-      res.statusCode = 400;
+    if (!webhookSecret) {
+      res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: result.errorMessage }));
+      res.end(JSON.stringify({ error: 'STRIPE_WEBHOOK_SECRET is not configured on the server.' }));
       return;
     }
 
-    const event = result.event!;
+    if (!signature) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Missing stripe-signature header' }));
+      return;
+    }
 
-    // Process verified event types (e.g., checkout.session.completed)
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
+      apiVersion: '2025-02-24.acacia' as any,
+    });
+
+    const event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.end(
@@ -53,8 +74,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       })
     );
   } catch (err: any) {
-    res.statusCode = 500;
+    res.statusCode = 400;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: 'Internal Server Error', message: err.message }));
+    res.end(JSON.stringify({ error: 'Webhook signature verification failed', message: err.message }));
   }
 }
