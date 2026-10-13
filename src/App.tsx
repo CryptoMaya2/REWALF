@@ -490,7 +490,7 @@ export const App: React.FC = () => {
         }}
       >
         <p>
-          Rewalf — Trustless Referral Payout Protocol | Non-Custodial Stellar Testnet Infrastructure
+          Rewalf. Trustless Referral Payout Protocol | Non-Custodial Stellar Testnet Infrastructure
         </p>
         <p style={{ marginTop: '4px' }}>
           All escrows and settlements are cryptographically anchored on Stellar Horizon. Private keys never touch Rewalf.

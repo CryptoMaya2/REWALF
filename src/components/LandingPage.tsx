@@ -210,11 +210,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               fontFamily: 'var(--font-display)',
             }}
           >
-            Referral rewards claimed instantly{' '}
+            Referral rewards are claimed{' '}
             <span className="gradient-text-lime">
               on Stellar
-            </span>{' '}
-            — with escrow you can verify.
+            </span>. You can verify the escrow.
           </h1>
 
           {/* Conversational Explanation */}
@@ -796,7 +795,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '14px' }}>
-              <em>"In past affiliate programs, I worked hard bringing customers to companies, only for them to take 3 months to pay me — or make up an excuse and never pay at all."</em>
+              <em>"In past affiliate programs, I worked hard bringing customers to companies, only for them to take 3 months to pay me, or make up an excuse and never pay at all."</em>
             </p>
 
             <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-input)', border: '1px solid var(--accent-lime-border)' }}>

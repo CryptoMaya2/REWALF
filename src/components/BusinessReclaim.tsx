@@ -249,7 +249,7 @@ export const BusinessReclaim: React.FC<BusinessReclaimProps> = ({
                           {agreement.lockTxHash.slice(0, 16)}...<ExternalLink size={11} />
                         </a>
                       ) : (
-                        <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture — no on-chain tx</span>
+                        <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture, no on-chain tx</span>
                       );
                     })()}
                   </div>
@@ -264,7 +264,7 @@ export const BusinessReclaim: React.FC<BusinessReclaimProps> = ({
                             {agreement.claimTxHash!.slice(0, 16)}...<ExternalLink size={11} />
                           </a>
                         ) : (
-                          <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture — no on-chain tx</span>
+                          <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture, no on-chain tx</span>
                         );
                       })()}
                     </div>
@@ -280,7 +280,7 @@ export const BusinessReclaim: React.FC<BusinessReclaimProps> = ({
                             {agreement.reclaimTxHash!.slice(0, 16)}...<ExternalLink size={11} />
                           </a>
                         ) : (
-                          <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture — no on-chain tx</span>
+                          <span style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>Demo fixture, no on-chain tx</span>
                         );
                       })()}
                     </div>

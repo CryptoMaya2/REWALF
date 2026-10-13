@@ -81,7 +81,7 @@ export const PayoutTraceView: React.FC<PayoutTraceViewProps> = ({
             >
               {agreements.map((a) => (
                 <option key={a.code} value={a.code}>
-                  #{a.code} — {a.customerLabel} ({a.amount} {a.assetCode} [{a.state}])
+                  #{a.code}, {a.customerLabel} ({a.amount} {a.assetCode} [{a.state}])
                 </option>
               ))}
             </select>

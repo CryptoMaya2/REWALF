@@ -341,7 +341,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({
                     <span className="status-badge badge-locked" style={{ fontSize: '10px' }}>Zero-Install</span>
                   </div>
                   <p style={{ fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                    Secure popup web signer — works in any desktop or mobile browser without installing anything
+                    Secure popup web signer. Works in any desktop or mobile browser without installing anything.
                   </p>
                 </div>
                 <ArrowRight size={16} color="var(--accent-lime)" />

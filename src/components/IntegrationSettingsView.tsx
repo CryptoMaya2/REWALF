@@ -429,7 +429,7 @@ export const IntegrationSettingsView: React.FC<IntegrationSettingsViewProps> = (
               checked={testTimestampOffset === 'expired'}
               onChange={() => setTestTimestampOffset('expired')}
             />
-            Expired Timestamp (&gt; 10 min ago — Test Replay Rejection)
+            Expired Timestamp (&gt; 10 min ago, test replay rejection)
           </label>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', cursor: 'pointer', color: 'var(--semantic-amber)' }}>

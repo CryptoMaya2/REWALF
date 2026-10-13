@@ -1,4 +1,4 @@
-# Rewalf — Trustless Stellar Referral Payouts
+# Rewalf: Trustless Stellar Referral Payouts
 
 > **Find Your Way Hackathon (Stellar Passport / HackMeridian) Entry**  
 > **Track:** General Track (Technical Execution, Meaningful Use of Stellar, Originality, Impact, UX & Presentation)
@@ -40,7 +40,7 @@ Rewalf follows leading Web3 protocol design standards:
 > Rewalf does not operate an inbuilt custodial wallet and **never asks for, handles, or stores your secret keys or seed phrase**.  
 > Users connect their own trusted Stellar wallet:  
 > - **Freighter Wallet:** The official browser extension wallet developed by the Stellar Development Foundation (SDF).  
-> - **Albedo:** Zero-install web signer with secure popup authorization — works on any desktop or mobile browser.  
+> - **Albedo:** Zero-install web signer with secure popup authorization. Works on any desktop or mobile browser.  
 > - **Disposable Sandbox Mode:** Provided solely for instant testnet judging and quick evaluation without installing software.  
 >  
 > Every blockchain operation (such as funding and locking the Escrow Vault) is handed off to your connected wallet interface for you to inspect, confirm, and cryptographically sign.  

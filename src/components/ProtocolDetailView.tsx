@@ -829,11 +829,11 @@ export const ProtocolDetailView: React.FC<ProtocolDetailViewProps> = ({
                             {a.claimTxHash.slice(0, 10)}... <ExternalLink size={10} />
                           </a>
                         ) : (
-                          '—'
+                          'N/A'
                         )}
                       </td>
                       <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {a.claimedAt ? new Date(a.claimedAt).toLocaleString() : '—'}
+                        {a.claimedAt ? new Date(a.claimedAt).toLocaleString() : 'N/A'}
                       </td>
                     </tr>
                   ))}

@@ -343,7 +343,7 @@ export const CreateProgramModal: React.FC<CreateProgramModalProps> = ({
                       >
                         {allProtocols.map((p) => (
                           <option key={p.id} value={p.id}>
-                            {p.name} ({p.website.replace(/^https?:\/\//, '')}) — {p.network}
+                            {p.name} ({p.website.replace(/^https?:\/\//, '')}), {p.network}
                           </option>
                         ))}
                       </select>

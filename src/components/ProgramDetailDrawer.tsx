@@ -296,7 +296,7 @@ export const ProgramDetailDrawer: React.FC<ProgramDetailDrawerProps> = ({
                       )}
                     </div>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: explorerUrl ? 'var(--accent-blue)' : 'var(--text-tertiary)', marginTop: '4px', wordBreak: 'break-all' }}>
-                      {explorerUrl ? agreement.lockTxHash : 'No on-chain transaction — demo fixture only'}
+                      {explorerUrl ? agreement.lockTxHash : 'No on-chain transaction, demo fixture only'}
                     </div>
                   </div>
                 );

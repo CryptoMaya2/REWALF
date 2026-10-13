@@ -258,7 +258,7 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
             >
               {allAgreements.map((a) => (
                 <option key={a.code} value={a.code}>
-                  #{a.code} — {a.customerLabel} ({a.amount} {a.assetCode} [{a.state}])
+                  #{a.code}, {a.customerLabel} ({a.amount} {a.assetCode} [{a.state}])
                 </option>
               ))}
             </select>
@@ -560,7 +560,7 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
                   <ExternalLink size={12} />
                 </a>
               ) : (
-                <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>Demo fixture — no on-chain transaction</span>
+                <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>Demo fixture, no on-chain transaction</span>
               )}
             </div>
           );

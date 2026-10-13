@@ -96,10 +96,10 @@ export interface Agreement {
   // Escrow Vault on Stellar
   escrowPublicKey: string;
   /**
-   * ⚠️  SECURITY WARNING — TESTNET DEMO ONLY
+   * ⚠️  SECURITY WARNING: TESTNET DEMO ONLY
    * This secret key is stored in localStorage purely for the sandbox demo signing flow.
    * NEVER ship this field on mainnet. On mainnet, escrow signing must happen via a
-   * server-side custodian, multi-sig, or hardware wallet — never client-side localStorage.
+   * server-side custodian, multi-sig, or hardware wallet, never client-side localStorage.
    */
   escrowSecretKey?: string;
 

@@ -186,7 +186,7 @@ export const RegisterProtocolModal: React.FC<RegisterProtocolModalProps> = ({
                 Register Protocol / Product
               </h2>
               <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                Stage {step} of 3 — {step === 1 ? 'Project Details' : step === 2 ? 'Ownership & Attribution' : 'Review & Confirm'}
+                Stage {step} of 3, {step === 1 ? 'Project Details' : step === 2 ? 'Ownership & Attribution' : 'Review & Confirm'}
               </p>
             </div>
           </div>
