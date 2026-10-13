@@ -173,6 +173,13 @@ export const ReferrerView: React.FC<ReferrerViewProps> = ({
         setAgreement({ ...updated });
       }
 
+      // Open new transaction hash on Stellar Expert
+      try {
+        window.open(getStellarExpertTxUrl(res.claimTxHash), '_blank');
+      } catch {
+        // Pop-up blocker fallback (link remains clickable in the UI banner)
+      }
+
       // Celebrate with confetti
       try {
         confetti({
