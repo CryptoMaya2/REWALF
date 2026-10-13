@@ -465,42 +465,34 @@ export async function claimRewardOnChain(
 
   const rewardAmount = payAmountNum.toFixed(7);
 
-  // 5. Check if destination account exists on Horizon
-  let destinationExists = false;
-  try {
-    await horizonServer.loadAccount(destination);
-    destinationExists = true;
-  } catch (err: any) {
-    if (err.response?.status === 404 || err.status === 404 || err.name === 'NotFoundError') {
-      destinationExists = false;
-    } else {
-      throw err;
-    }
-  }
-
-  // 6. Build transaction: createAccount if unfunded destination, payment if account exists
+  // 5. Build transaction: createAccount if unfunded destination, payment if account exists
   // Do NOT add manageData operations here because adding new data entries consumes additional reserve!
   const builder = new StellarSdk.TransactionBuilder(escrowAccount, {
     fee: StellarSdk.BASE_FEE,
     networkPassphrase: NETWORK_PASSPHRASE,
   });
 
-  if (destinationExists) {
-    builder.addOperation(
-      StellarSdk.Operation.payment({
+  let destExists = true;
+  try {
+    await horizonServer.loadAccount(destination);
+  } catch (err: any) {
+    if (err?.response?.status === 404) destExists = false;
+    else throw err;
+  }
+
+  const op = destExists
+    ? StellarSdk.Operation.payment({
         destination,
         asset: StellarSdk.Asset.native(),
         amount: rewardAmount,
       })
-    );
-  } else {
-    builder.addOperation(
-      StellarSdk.Operation.createAccount({
+    : StellarSdk.Operation.createAccount({
         destination,
         startingBalance: rewardAmount,
-      })
-    );
-  }
+      });
+
+  builder.addOperation(op);
+
 
   builder.setTimeout(60);
   const tx = builder.build();
@@ -575,40 +567,32 @@ export async function reclaimRewardOnChain(
 
   const returnAmount = payAmountNum.toFixed(7);
 
-  // 4. Check if destination account exists on Horizon
-  let destinationExists = false;
-  try {
-    await horizonServer.loadAccount(destination);
-    destinationExists = true;
-  } catch (err: any) {
-    if (err.response?.status === 404 || err.status === 404 || err.name === 'NotFoundError') {
-      destinationExists = false;
-    } else {
-      throw err;
-    }
-  }
-
   const builder = new StellarSdk.TransactionBuilder(escrowAccount, {
     fee: StellarSdk.BASE_FEE,
     networkPassphrase: NETWORK_PASSPHRASE,
   });
 
-  if (destinationExists) {
-    builder.addOperation(
-      StellarSdk.Operation.payment({
+  let destExists = true;
+  try {
+    await horizonServer.loadAccount(destination);
+  } catch (err: any) {
+    if (err?.response?.status === 404) destExists = false;
+    else throw err;
+  }
+
+  const op = destExists
+    ? StellarSdk.Operation.payment({
         destination,
         asset: StellarSdk.Asset.native(),
         amount: returnAmount,
       })
-    );
-  } else {
-    builder.addOperation(
-      StellarSdk.Operation.createAccount({
+    : StellarSdk.Operation.createAccount({
         destination,
         startingBalance: returnAmount,
-      })
-    );
-  }
+      });
+
+  builder.addOperation(op);
+
 
   builder.setTimeout(60);
   const tx = builder.build();
