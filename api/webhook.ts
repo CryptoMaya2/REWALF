@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { verifyStripeWebhookSignature } from '../src/server/stripeWebhookHandler';
+import { verifyStripeWebhookSignature } from '../src/server/stripeWebhookHandler.ts';
 
 export const config = {
   api: {
